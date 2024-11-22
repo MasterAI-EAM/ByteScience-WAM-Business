@@ -1,0 +1,57 @@
+# system configuration
+system:
+  addr: "9000"                  # 系统服务监听端口
+  name: "admin"                 # 系统服务名称
+  version: "1.0.0"              # 系统版本
+  http:
+    readTimeout: 10s            # HTTP读取超时时间
+    writeTimeout: 15s           # HTTP写入超时时间
+    idleTimeout: 30s            # HTTP空闲超时时间
+  security:
+    cors:
+      enabled: true             # 是否启用跨域支持
+      allowOrigins: "*"         # 允许跨域的来源
+      allowMethods: "GET,POST,PUT,DELETE" # 允许的HTTP方法
+
+
+# jwt 鉴权设置
+Jwt:
+  accessSecret: ad879037-c7a4-4063-9236-6bfc35d54b7d  # jwt token的密钥
+  accessExpire: 86400 # jwtToken 有效时间 单位：秒
+
+# Mysql 数据库配置
+Mysql:
+  host: "127.0.0.1"         # 数据库主机地址，通常是127.0.0.1或数据库所在机器的IP
+  port: 3306                # 数据库端口，默认为3306
+  user: "root"              # 数据库用户名
+  password: "123456"        # 数据库密码
+  db: "wam"                 # 要连接的数据库名
+  enabled: true             # 控制是否启用MySQL日志输出，true表示启用，false表示禁用
+  level: "info"             # 设置MySQL日志级别，支持的级别有:silent,error,warn,info,debug
+  slowThreshold: 1          # 慢查询阈值，单位秒，表示查询执行超过该时间会被记录为慢查询 例如，1表示查询超过1秒时会记录为慢查询日志
+
+# Redis 缓存配置
+redis:
+  host: "127.0.0.1"           # Redis服务的IP地址
+  port: 6379                  # Redis服务的端口号
+  password: ""                # Redis认证的密码，如无密码则留空
+  db: 0                       # 使用的Redis数据库序号（默认0）
+  maxIdle: 10                 # 最大空闲连接数
+  maxActive: 100              # 最大活跃连接数（0 表示无限制）
+  idleTimeout: 300s           # 空闲连接超时时间，默认300秒
+  connectTimeout: 5s          # Redis连接超时时间，默认5秒
+  readTimeout: 3s             # 读操作的超时时间，默认3秒
+  writeTimeout: 3s            # 写操作的超时时间，默认3秒
+  poolSize: 50                # 连接池大小（建议10*CPU核心数）
+  logEnabled: true            # 是否记录Redis操作日志，默认true
+
+# 日志
+Logger:
+  logLevel: "info"                # 日志级别（debug、info、warn、error、fatal、panic）
+  logFormat: "text"               # 日志格式（json、text、table）
+  jsonFormatter: true             # json 是否格式化 true false
+  output: "console"               # 输出方式（console、file）
+  logPath: "./logs"               # 日志文件路径，按日期命名
+  maxSize: 200                    # 日志文件最大大小（MB）（当 Output 为 file 时有效）
+  maxBackups: 30                  # 最大保留日志文件数（当 Output 为 file 时有效）
+  maxAge: 30                      # 日志文件保留天数（当 Output 为 file 时有效）
