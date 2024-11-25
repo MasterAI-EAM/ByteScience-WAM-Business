@@ -4,6 +4,7 @@ import (
 	"ByteScience-WAM-Business/internal/model/entity"
 	"ByteScience-WAM-Business/pkg/db"
 	"context"
+	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -17,7 +18,7 @@ func NewUserRoleDao() *UserRoleDao {
 
 // InsertBatchTx 在事务中批量插入用户角色关联
 func (urd *UserRoleDao) InsertBatchTx(ctx context.Context, tx *gorm.DB, userRoles []*entity.UserRoles) error {
-	return tx.WithContext(ctx).Create(&userRoles).Error
+	return tx.WithContext(ctx).CreateInBatches(&userRoles, 300).Error
 }
 
 // Assign 给用户分配角色
@@ -36,6 +37,7 @@ func (urd *UserRoleDao) GetRolesByUserID(ctx context.Context, userID string) ([]
 		Select("roles.*").
 		Joins("JOIN user_roles ON user_roles.role_id = roles.id").
 		Where("user_roles.user_id = ?", userID).
+		Where("roles.deleted_at" + " IS NULL").
 		Find(&roles).Error
 	return roles, err
 }
@@ -68,6 +70,7 @@ func (urd *UserRoleDao) GetUsersByRoleID(ctx context.Context, roleID string) ([]
 		Select("users.*").
 		Joins("JOIN user_roles ON user_roles.user_id = users.id").
 		Where("user_roles.role_id = ?", roleID).
+		Where("users.deleted_at" + " IS NULL").
 		Find(&users).Error
 	return users, err
 }
@@ -97,4 +100,21 @@ func (urd *UserRoleDao) Query(ctx context.Context, page int, pageSize int, filte
 	}
 
 	return userRoles, total, nil
+}
+
+// GetUserIDsByRoleIDTx 获取与指定角色关联的用户 ID 列表
+func (urd *UserRoleDao) GetUserIDsByRoleIDTx(ctx context.Context, tx *gorm.DB, roleID string) ([]string, error) {
+	var userIDs []string
+
+	// 查询 user_roles 表，获取所有关联的 user_id
+	err := tx.WithContext(ctx).
+		Table("user_roles").
+		Where("role_id = ?", roleID).
+		Pluck("user_id", &userIDs).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch user IDs for role %d: %w", roleID, err)
+	}
+
+	return userIDs, nil
 }

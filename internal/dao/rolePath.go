@@ -17,7 +17,7 @@ func NewRolePathDao() *RolePathDao {
 
 // InsertBatchTx 在事务中批量插入角色路径关系
 func (rpd *RolePathDao) InsertBatchTx(ctx context.Context, tx *gorm.DB, rolePaths []*entity.RolePaths) error {
-	return tx.WithContext(ctx).Create(&rolePaths).Error
+	return tx.WithContext(ctx).CreateInBatches(&rolePaths, 300).Error
 }
 
 // Assign 分配路径给角色
@@ -69,6 +69,7 @@ func (rpd *RolePathDao) GetByPathID(ctx context.Context, pathID string) ([]*enti
 		Select("roles.*").
 		Joins("JOIN role_paths ON role_paths.role_id = roles.id").
 		Where("role_paths.path_id = ?", pathID).
+		Where(entity.RolesColumns.DeletedAt + " IS NULL").
 		Find(&roles).Error
 	return roles, err
 }

@@ -7,4 +7,5 @@ import (
 func LoadRouters(router *gin.Engine) {
 	v1Group := router.Group("/v1")
 	InitAuthRouter(v1Group)
+	InitDataRouter(v1Group)
 }

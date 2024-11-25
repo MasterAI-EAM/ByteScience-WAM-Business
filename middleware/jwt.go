@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"ByteScience-WAM-Business/internal/utils"
+	"ByteScience-WAM-Business/pkg/db"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
@@ -52,12 +53,41 @@ func JWTAuth(secretKey string) gin.HandlerFunc {
 		}
 
 		// token 验证成功，设置用户信息
+		var userID string
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			// 设置用户信息到上下文中
-			ctx.Set("userId", claims["userId"])
+			userID = claims["userId"].(string)
+			ctx.Set("userId", userID)
 		} else {
 			// token 无效，返回错误
 			utils.SendResponse(ctx, 401, utils.ErrorResponse(utils.InvalidTokenCode, "Invalid token"))
+			ctx.Abort()
+			return
+		}
+
+		// 获取请求的路径和方法
+		requestPath := ctx.Request.URL.Path
+		requestMethod := ctx.Request.Method
+
+		// 检查用户是否具有访问特定路径的权限
+		var userHasPermission bool
+		err = db.Client.WithContext(ctx).
+			Table("user_permissions").
+			Joins("INNER JOIN paths ON user_permissions.path_id = paths.id").
+			Where("user_permissions.user_id = ? AND paths.path = ? AND paths.method = ?", userID, requestPath, requestMethod).
+			Select("1").
+			Limit(1).
+			Scan(&userHasPermission).Error
+
+		if err != nil {
+			utils.SendResponse(ctx, 500, utils.ErrorResponse(utils.InternalError, "Failed to check user permissions"))
+			ctx.Abort()
+			return
+		}
+
+		// 如果用户没有权限，返回 403 错误
+		if !userHasPermission {
+			utils.SendResponse(ctx, 403, utils.ErrorResponse(utils.PermissionDeniedCode, "You do not have permission. Please contact the admin."))
 			ctx.Abort()
 			return
 		}
