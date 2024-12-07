@@ -17,6 +17,9 @@ func InitDataRouter(routerGroup *gin.RouterGroup) {
 	{
 		sampleApi := data.NewSampleApi()
 		utils.RegisterRoute(dataGroup, http.MethodGet, "/sample", sampleApi.List)
+		utils.RegisterRoute(dataGroup, http.MethodPut, "/sample", sampleApi.Edit)
+		utils.RegisterRoute(dataGroup, http.MethodDelete, "/sample", sampleApi.Delete)
+		utils.RegisterRoute(dataGroup, http.MethodPost, "/sample/import", sampleApi.Import)
 	}
 
 }

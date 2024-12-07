@@ -43,21 +43,8 @@ const (
 	PasswordGenerationFailedCode = 1307 // 密码生成失败
 	NewPasswordSameAsOldCode     = 1308 // 新密码与旧密码相同
 
-	// 接口错误
-	AdminInsertFailedCode       = 2001 // 插入管理员失败
-	AdminUpdateFailedCode       = 2002 // 更新管理员信息失败
-	AdminDeleteFailedCode       = 2003 // 删除管理员失败
-	AdminQueryListFailedCode    = 2004 // 查询管理员列表失败
-	RoleInsertFailedCode        = 2005 // 插入角色失败
-	RoleUpdateFailedCode        = 2006 // 更新角色失败
-	RoleDeleteFailedCode        = 2007 // 删除角色失败
-	RoleQueryListFailedCode     = 2008 // 查询角色列表失败
-	UserDeleteFailedCode        = 2009 // 用户删除失败
-	UserQueryFailedCode         = 2010 // 用户查询失败
-	UserQueryListFailedCode     = 2011 // 用户列表查询失败
-	UserInsertFailedCode        = 2012 // 用户插入失败
-	UserConflictCheckFailedCode = 2013 // 用户冲突检测失败
-	UserUpdateFailedCode        = 2014 // 用户更新失败
+	// 接口处理
+	FileParsingFailedCode = 3001 // 文件解析失败
 )
 
 // ErrorMessages 错误信息映射
@@ -103,19 +90,6 @@ var ErrorMessages = map[int]string{
 	OldPasswordIncorrectCode:     "Old password is incorrect",
 	PasswordGenerationFailedCode: "Failed to generate password",
 
-	// 接口错误
-	AdminInsertFailedCode:       "Failed to insert admin",
-	AdminUpdateFailedCode:       "Failed to update admin",
-	AdminDeleteFailedCode:       "Failed to delete admin",
-	AdminQueryListFailedCode:    "Failed to query admin list",
-	RoleInsertFailedCode:        "Failed to insert role",
-	RoleUpdateFailedCode:        "Failed to update role",
-	RoleDeleteFailedCode:        "Failed to delete role",
-	RoleQueryListFailedCode:     "Failed to query role list",
-	UserConflictCheckFailedCode: "User conflict check failed",
-	UserUpdateFailedCode:        "Failed to update user",
-	UserDeleteFailedCode:        "Failed to delete user",
-	UserQueryFailedCode:         "Failed to query user",
-	UserQueryListFailedCode:     "Failed to query user list",
-	UserInsertFailedCode:        "Failed to insert user",
+	// 接口处理
+	FileParsingFailedCode: "File parsing failed",
 }

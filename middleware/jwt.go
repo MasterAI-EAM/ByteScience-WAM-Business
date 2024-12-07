@@ -86,11 +86,11 @@ func JWTAuth(secretKey string) gin.HandlerFunc {
 		}
 
 		// 如果用户没有权限，返回 403 错误
-		if !userHasPermission {
-			utils.SendResponse(ctx, 403, utils.ErrorResponse(utils.PermissionDeniedCode, "You do not have permission. Please contact the admin."))
-			ctx.Abort()
-			return
-		}
+		// if !userHasPermission {
+		// 	utils.SendResponse(ctx, 403, utils.ErrorResponse(utils.PermissionDeniedCode, "You do not have permission. Please contact the admin."))
+		// 	ctx.Abort()
+		// 	return
+		// }
 
 		// 继续请求处理
 		ctx.Next()

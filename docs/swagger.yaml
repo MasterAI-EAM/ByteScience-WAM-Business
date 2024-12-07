@@ -54,6 +54,166 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwOTkwMTQsImlhdCI6MTczMjA5OTAxNCwidXNlcklkIjoiMmE1ZWVkNDItMjVhMy00MGJlLTlmY2QtNjEzMmJlYzgzNTE3In0.YyrvQS66uYNVtCKKi7rm7xqJrCIFSq12SXCJcqAxKso
         type: string
     type: object
+  data.ExperimentData:
+    properties:
+      experimentId:
+        description: |-
+          ExperimentID string 实验ID
+          唯一标识实验的UUID
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      experimentName:
+        description: |-
+          ExperimentName string 实验名称
+          实验的名称信息
+        example: 实验名称
+        type: string
+      fileId:
+        description: |-
+          FileID string 文件ID
+          关联的文件资源ID
+        example: 123e4567-e89b-12d3-a456-426614174001
+        type: string
+      steps:
+        description: |-
+          Steps []ExperimentStepData 实验步骤
+          包含该实验的步骤信息
+        items:
+          $ref: '#/definitions/data.ExperimentStepData'
+        type: array
+    type: object
+  data.ExperimentListRequest:
+    properties:
+      experimentName:
+        description: |-
+          ExperimentName string 实验名称，选填，长度限制：2-128字符
+          用于按名称模糊查询实验记录
+        example: 实验名称
+        maxLength: 128
+        minLength: 2
+        type: string
+      page:
+        description: |-
+          Page 页码，选填，范围限制：[1,10000]
+          用于分页查询管理员列表，最小值为1，最大值为10000
+        example: 1
+        maximum: 10000
+        minimum: 1
+        type: integer
+      pageSize:
+        description: |-
+          PageSize 每页大小，选填，范围限制：[1,10000]
+          用于限制每页返回的管理员数量，最小值为1，最大值为10000
+        example: 10
+        maximum: 10000
+        minimum: 1
+        type: integer
+    type: object
+  data.ExperimentListResponse:
+    properties:
+      list:
+        description: |-
+          List []ExperimentData 数据
+          分页返回的实验记录列表
+        items:
+          $ref: '#/definitions/data.ExperimentData'
+        type: array
+      total:
+        description: |-
+          Total int64 总条数
+          返回符合条件的实验记录总数
+        example: 100
+        type: integer
+    type: object
+  data.ExperimentStepData:
+    properties:
+      experimentCondition:
+        description: |-
+          ExperimentCondition string 实验条件
+          步骤对应的实验条件描述
+        example: 实验条件
+        type: string
+      materialGroups:
+        description: |-
+          MaterialGroups []MaterialGroupData 材料组
+          该步骤中涉及的材料组信息
+        items:
+          $ref: '#/definitions/data.MaterialGroupData'
+        type: array
+      resultValue:
+        description: |-
+          ResultValue string 实验条件
+          步骤对应的实验结果
+        example: 步骤结果值
+        type: string
+      stepId:
+        description: |-
+          StepID string 步骤ID
+          唯一标识实验步骤的UUID
+        example: 123e4567-e89b-12d3-a456-426614174002
+        type: string
+      stepName:
+        description: |-
+          StepName string 步骤名称
+          描述实验步骤的名称
+        example: 步骤名称
+        type: string
+      stepNameDescription:
+        description: |-
+          StepNameDescription string 实验步骤描述
+          实验步骤描述
+        example: 实验步骤描述
+        type: string
+    type: object
+  data.MaterialData:
+    properties:
+      materialId:
+        description: |-
+          MaterialID string 材料ID
+          唯一标识材料的UUID
+        example: 123e4567-e89b-12d3-a456-426614174004
+        type: string
+      materialName:
+        description: |-
+          MaterialName string 材料名称
+          材料的名称信息
+        example: 材料名称
+        type: string
+      percentage:
+        description: |-
+          Percentage float64 材料占比
+          材料在材料组中的占比，百分比形式
+        example: 60
+        type: number
+    type: object
+  data.MaterialGroupData:
+    properties:
+      materialGroupId:
+        description: |-
+          MaterialGroupID string 材料组ID
+          唯一标识材料组的UUID
+        example: 123e4567-e89b-12d3-a456-426614174003
+        type: string
+      materialGroupName:
+        description: |-
+          MaterialGroupName string 材料组名称
+          材料组的名称信息
+        example: 材料组名称
+        type: string
+      materials:
+        description: |-
+          Materials []MaterialData 材料列表
+          材料组内的具体材料信息
+        items:
+          $ref: '#/definitions/data.MaterialData'
+        type: array
+      proportion:
+        description: |-
+          Proportion float64 材料组占比
+          材料组在实验步骤中的占比，百分比形式
+        example: 25.5
+        type: number
+    type: object
   dto.Empty:
     type: object
   dto.ErrorResponse:
@@ -102,6 +262,65 @@ paths:
       summary: 修改用户密码
       tags:
       - 用户认证
+  /data/sample:
+    get:
+      consumes:
+      - application/json
+      description: 根据分页请求获取实验列表，支持按实验名称进行筛选
+      parameters:
+      - description: 请求参数，包含分页信息及筛选条件
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/data.ExperimentListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功获取实验列表，返回实验数据
+          schema:
+            $ref: '#/definitions/data.ExperimentListResponse'
+        "400":
+          description: 请求参数错误，如分页参数错误、筛选条件不符合要求
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 服务器内部错误，可能是数据库查询出错等情况
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 获取实验列表
+      tags:
+      - 实验管理
+  /data/sample/import:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 接收上传的文件并处理，根据业务需求进行相关文件解析和导入
+      parameters:
+      - description: 上传的文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 文件导入成功，返回空对象表示操作成功
+          schema:
+            $ref: '#/definitions/dto.Empty'
+        "400":
+          description: 请求参数错误，可能是文件上传失败或格式不符合要求
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 服务器内部错误，可能是文件解析或存储过程中出现异常
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 导入文件
+      tags:
+      - 实验管理
   /login:
     post:
       consumes:

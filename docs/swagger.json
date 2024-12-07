@@ -56,6 +56,96 @@
                 }
             }
         },
+        "/data/sample": {
+            "get": {
+                "description": "根据分页请求获取实验列表，支持按实验名称进行筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "实验管理"
+                ],
+                "summary": "获取实验列表",
+                "parameters": [
+                    {
+                        "description": "请求参数，包含分页信息及筛选条件",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.ExperimentListRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功获取实验列表，返回实验数据",
+                        "schema": {
+                            "$ref": "#/definitions/data.ExperimentListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，如分页参数错误、筛选条件不符合要求",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是数据库查询出错等情况",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/data/sample/import": {
+            "post": {
+                "description": "接收上传的文件并处理，根据业务需求进行相关文件解析和导入",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "实验管理"
+                ],
+                "summary": "导入文件",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "上传的文件",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "文件导入成功，返回空对象表示操作成功",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Empty"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，可能是文件上传失败或格式不符合要求",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是文件解析或存储过程中出现异常",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "description": "提供用户名和密码进行登录操作，验证用户身份并获取相应权限",
@@ -171,6 +261,160 @@
                     "description": "Token 登陆凭证",
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwOTkwMTQsImlhdCI6MTczMjA5OTAxNCwidXNlcklkIjoiMmE1ZWVkNDItMjVhMy00MGJlLTlmY2QtNjEzMmJlYzgzNTE3In0.YyrvQS66uYNVtCKKi7rm7xqJrCIFSq12SXCJcqAxKso"
+                }
+            }
+        },
+        "data.ExperimentData": {
+            "type": "object",
+            "properties": {
+                "experimentId": {
+                    "description": "ExperimentID string 实验ID\n唯一标识实验的UUID",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "experimentName": {
+                    "description": "ExperimentName string 实验名称\n实验的名称信息",
+                    "type": "string",
+                    "example": "实验名称"
+                },
+                "fileId": {
+                    "description": "FileID string 文件ID\n关联的文件资源ID",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174001"
+                },
+                "steps": {
+                    "description": "Steps []ExperimentStepData 实验步骤\n包含该实验的步骤信息",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.ExperimentStepData"
+                    }
+                }
+            }
+        },
+        "data.ExperimentListRequest": {
+            "type": "object",
+            "properties": {
+                "experimentName": {
+                    "description": "ExperimentName string 实验名称，选填，长度限制：2-128字符\n用于按名称模糊查询实验记录",
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 2,
+                    "example": "实验名称"
+                },
+                "page": {
+                    "description": "Page 页码，选填，范围限制：[1,10000]\n用于分页查询管理员列表，最小值为1，最大值为10000",
+                    "type": "integer",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "example": 1
+                },
+                "pageSize": {
+                    "description": "PageSize 每页大小，选填，范围限制：[1,10000]\n用于限制每页返回的管理员数量，最小值为1，最大值为10000",
+                    "type": "integer",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "example": 10
+                }
+            }
+        },
+        "data.ExperimentListResponse": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "description": "List []ExperimentData 数据\n分页返回的实验记录列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.ExperimentData"
+                    }
+                },
+                "total": {
+                    "description": "Total int64 总条数\n返回符合条件的实验记录总数",
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
+        "data.ExperimentStepData": {
+            "type": "object",
+            "properties": {
+                "experimentCondition": {
+                    "description": "ExperimentCondition string 实验条件\n步骤对应的实验条件描述",
+                    "type": "string",
+                    "example": "实验条件"
+                },
+                "materialGroups": {
+                    "description": "MaterialGroups []MaterialGroupData 材料组\n该步骤中涉及的材料组信息",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.MaterialGroupData"
+                    }
+                },
+                "resultValue": {
+                    "description": "ResultValue string 实验条件\n步骤对应的实验结果",
+                    "type": "string",
+                    "example": "步骤结果值"
+                },
+                "stepId": {
+                    "description": "StepID string 步骤ID\n唯一标识实验步骤的UUID",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174002"
+                },
+                "stepName": {
+                    "description": "StepName string 步骤名称\n描述实验步骤的名称",
+                    "type": "string",
+                    "example": "步骤名称"
+                },
+                "stepNameDescription": {
+                    "description": "StepNameDescription string 实验步骤描述\n实验步骤描述",
+                    "type": "string",
+                    "example": "实验步骤描述"
+                }
+            }
+        },
+        "data.MaterialData": {
+            "type": "object",
+            "properties": {
+                "materialId": {
+                    "description": "MaterialID string 材料ID\n唯一标识材料的UUID",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174004"
+                },
+                "materialName": {
+                    "description": "MaterialName string 材料名称\n材料的名称信息",
+                    "type": "string",
+                    "example": "材料名称"
+                },
+                "percentage": {
+                    "description": "Percentage float64 材料占比\n材料在材料组中的占比，百分比形式",
+                    "type": "number",
+                    "example": 60
+                }
+            }
+        },
+        "data.MaterialGroupData": {
+            "type": "object",
+            "properties": {
+                "materialGroupId": {
+                    "description": "MaterialGroupID string 材料组ID\n唯一标识材料组的UUID",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174003"
+                },
+                "materialGroupName": {
+                    "description": "MaterialGroupName string 材料组名称\n材料组的名称信息",
+                    "type": "string",
+                    "example": "材料组名称"
+                },
+                "materials": {
+                    "description": "Materials []MaterialData 材料列表\n材料组内的具体材料信息",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.MaterialData"
+                    }
+                },
+                "proportion": {
+                    "description": "Proportion float64 材料组占比\n材料组在实验步骤中的占比，百分比形式",
+                    "type": "number",
+                    "example": 25.5
                 }
             }
         },
