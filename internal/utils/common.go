@@ -29,3 +29,17 @@ func Contains[T comparable](slice []T, value T) bool {
 	}
 	return false
 }
+
+// RemoveDuplicates 去重函数，适用于任何可比较类型
+func RemoveDuplicates[T comparable](arr []T) []T {
+	seen := make(map[T]struct{}) // 用于存储已遇到的元素
+	result := make([]T, 0, len(arr))
+
+	for _, item := range arr {
+		if _, exists := seen[item]; !exists {
+			seen[item] = struct{}{}
+			result = append(result, item)
+		}
+	}
+	return result
+}

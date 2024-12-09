@@ -20,6 +20,9 @@ func InitDataRouter(routerGroup *gin.RouterGroup) {
 		utils.RegisterRoute(dataGroup, http.MethodPut, "/sample", sampleApi.Edit)
 		utils.RegisterRoute(dataGroup, http.MethodDelete, "/sample", sampleApi.Delete)
 		utils.RegisterRoute(dataGroup, http.MethodPost, "/sample/import", sampleApi.Import)
+
+		inferenceApi := data.NewInferenceApi()
+		utils.RegisterRoute(dataGroup, http.MethodPost, "/inference/prediction", inferenceApi.Prediction)
 	}
 
 }

@@ -43,6 +43,9 @@ const (
 	PasswordGenerationFailedCode = 1307 // 密码生成失败
 	NewPasswordSameAsOldCode     = 1308 // 新密码与旧密码相同
 
+	// 文件相关
+	FileTooLargeCode = 1401 // 文件大小超出限制
+
 	// 接口处理
 	FileParsingFailedCode = 3001 // 文件解析失败
 )
@@ -89,6 +92,9 @@ var ErrorMessages = map[int]string{
 	PasswordMismatchCode:         "Passwords do not match",
 	OldPasswordIncorrectCode:     "Old password is incorrect",
 	PasswordGenerationFailedCode: "Failed to generate password",
+
+	// 文件相关
+	FileTooLargeCode: "File too large",
 
 	// 接口处理
 	FileParsingFailedCode: "File parsing failed",

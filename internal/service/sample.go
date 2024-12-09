@@ -6,6 +6,7 @@ import (
 	"ByteScience-WAM-Business/internal/model/dto"
 	"ByteScience-WAM-Business/internal/model/dto/data"
 	"ByteScience-WAM-Business/internal/model/entity"
+	"ByteScience-WAM-Business/internal/utils"
 	"ByteScience-WAM-Business/pkg/db"
 	"ByteScience-WAM-Business/pkg/logger"
 	"context"
@@ -42,8 +43,22 @@ func (ss *SampleService) List(ctx context.Context, req *data.ExperimentListReque
 
 	// 获取所有实验ID
 	experimentIDs := make([]string, len(experiments))
+	fileIDs := make([]string, 0)
 	for i, experiment := range experiments {
 		experimentIDs[i] = experiment.ID
+		fileIDs = append(fileIDs, experiment.FileID)
+	}
+
+	var files []entity.ExperimentFiles
+	fileMap := make(map[string]string, 0)
+	fileIDs = utils.RemoveDuplicates(fileIDs)
+	if err := db.Client.WithContext(ctx).
+		Where("id IN (?)", fileIDs).
+		Find(&files).Error; err != nil {
+		return nil, err
+	}
+	for _, file := range files {
+		fileMap[file.ID] = file.FileName
 	}
 
 	// 一次性查询所有实验步骤
@@ -145,6 +160,7 @@ func (ss *SampleService) List(ctx context.Context, req *data.ExperimentListReque
 			ExperimentID:   experiment.ID,
 			ExperimentName: experiment.ExperimentName,
 			FileID:         experiment.FileID,
+			FileName:       fileMap[experiment.FileID],
 			Steps:          stepsData,
 		})
 	}
@@ -156,8 +172,33 @@ func (ss *SampleService) List(ctx context.Context, req *data.ExperimentListReque
 	}, nil
 }
 
+// Delete 删除实验数据
+func (ss *SampleService) Delete(ctx context.Context, req *data.ExperimentDeleteRequest) (*dto.Empty,
+	error) {
+	err := ss.experimentDao.DeleteByID(ctx, req.ExperimentID)
+
+	return nil, err
+}
+
+// Edit 修改实验数据
+func (ss *SampleService) Edit(ctx context.Context, req *data.ExperimentUpdateRequest) (*dto.Empty, error) {
+	update := map[string]interface{}{
+		entity.ExperimentColumns.ExperimentName: req.ExperimentName,
+	}
+	err := ss.experimentDao.Update(ctx, req.ExperimentID, update)
+
+	return nil, err
+}
+
 // Import 文件导入数据库
 func (ss SampleService) Import(ctx context.Context, file *multipart.FileHeader) (*dto.Empty, error) {
+	experimentFile := entity.ExperimentFiles{
+		ID:        uuid.NewString(),
+		FileName:  file.Filename,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
 	// 获取excel内容
 	data, err := getXlsxContent(file)
 	if err != nil {
@@ -168,11 +209,11 @@ func (ss SampleService) Import(ctx context.Context, file *multipart.FileHeader) 
 	uuidMap, experimentGroupIdList := initUUIDMaps(data)
 
 	// 将excel数据转成mysql数据
-	materials, experiments, experimentSteps, experimentStepMaterial, err := getData(data, uuidMap,
+	materials, experiments, experimentSteps, experimentStepMaterial, err := getData(experimentFile.ID, data, uuidMap,
 		experimentGroupIdList)
 
 	// 将数据入库
-	if err = WriteData(materials, experiments, experimentSteps, experimentStepMaterial); err != nil {
+	if err = WriteData(experimentFile, materials, experiments, experimentSteps, experimentStepMaterial); err != nil {
 		return nil, err
 	}
 
@@ -222,7 +263,9 @@ func getXlsxContent(file *multipart.FileHeader) ([][]string, error) {
 }
 
 // getData 将excel内容转换成入库数据
-func getData(data [][]string, uuidMap map[int]string, experimentGroupIdList map[int][]string) ([]entity.Materials, []entity.Experiment, []entity.ExperimentSteps,
+func getData(fileId string, data [][]string, uuidMap map[int]string, experimentGroupIdList map[int][]string) ([]entity.
+	Materials,
+	[]entity.Experiment, []entity.ExperimentSteps,
 	[]entity.ExperimentStepMaterial, error) {
 	var index, index2, index3, index4 int
 	var isIndexSet, isIndexSet2, isIndexSet3, isIndexSet4 bool // 添加一个布尔变量标志是否已设置 index
@@ -233,7 +276,6 @@ func getData(data [][]string, uuidMap map[int]string, experimentGroupIdList map[
 	var experimentSteps []entity.ExperimentSteps
 	var experimentStepMaterials []entity.ExperimentStepMaterial
 	var err error
-	fileId := uuid.NewString()
 	now := time.Now()
 
 	var num int64
@@ -385,11 +427,16 @@ func getData(data [][]string, uuidMap map[int]string, experimentGroupIdList map[
 }
 
 // WriteData 将excel内容入库
-func WriteData(materials []entity.Materials, experiments []entity.Experiment, experimentSteps []entity.ExperimentSteps,
+func WriteData(experimentFile entity.ExperimentFiles, materials []entity.Materials, experiments []entity.Experiment,
+	experimentSteps []entity.ExperimentSteps,
 	experimentStepMaterials []entity.ExperimentStepMaterial) error {
 	// 使用事务闭包
 	if err := db.Client.Transaction(func(tx *gorm.DB) error {
 		maxNum := 500
+		if err := tx.Create(experimentFile).Error; err != nil {
+			logger.Logger.Errorf("[Import] WriteData Create experimentFile err: %v", err)
+			return err
+		}
 		if err := tx.CreateInBatches(materials, maxNum).Error; err != nil {
 			logger.Logger.Errorf("[Import] WriteData CreateInBatches materials err: %v", err)
 			return err

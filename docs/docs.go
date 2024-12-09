@@ -111,6 +111,94 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "put": {
+                "description": "根据实验ID修改实验的具体信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "实验管理"
+                ],
+                "summary": "修改实验信息",
+                "parameters": [
+                    {
+                        "description": "请求参数，包含实验ID及要修改的具体内容",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.ExperimentUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功修改实验信息",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Empty"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，如实验ID不存在或修改内容无效",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是数据库更新失败等情况",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据实验ID删除实验",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "实验管理"
+                ],
+                "summary": "删除实验",
+                "parameters": [
+                    {
+                        "description": "请求参数，包含要删除的实验ID",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.ExperimentDeleteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功删除实验",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Empty"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，如实验ID不存在或格式无效",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是数据库删除失败等情况",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/data/sample/import": {
@@ -196,6 +284,98 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "服务器内部错误，可能是数据库查询出错、验证逻辑异常等情况",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/inference/prediction": {
+            "post": {
+                "description": "通过提供的配方信息，预测并推荐适合的材料",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "模型预测"
+                ],
+                "summary": "根据配方推荐材料",
+                "parameters": [
+                    {
+                        "description": "配方推荐请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.PredictionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "推荐成功，返回推荐的材料列表",
+                        "schema": {
+                            "$ref": "#/definitions/data.PredictionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，可能是配方信息不完整或格式不正确",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是预测服务异常",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/inference/prediction/demo": {
+            "post": {
+                "description": "演示版本的配方推荐功能，提供简单的预测功能",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "模型预测"
+                ],
+                "summary": "根据配方推荐材料（Demo）",
+                "parameters": [
+                    {
+                        "description": "配方推荐演示请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.PredictionDemoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "演示推荐成功，返回推荐的材料示例",
+                        "schema": {
+                            "$ref": "#/definitions/data.PredictionDemoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，可能是配方信息不完整或格式不正确",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是演示服务异常",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -293,12 +473,27 @@ const docTemplate = `{
                     "type": "string",
                     "example": "123e4567-e89b-12d3-a456-426614174001"
                 },
+                "fileName": {
+                    "description": "fileName string 文件名\n关联的文件资源ID",
+                    "type": "string",
+                    "example": "240628AI模型数据200组 含FRP性能-(对外）FD"
+                },
                 "steps": {
                     "description": "Steps []ExperimentStepData 实验步骤\n包含该实验的步骤信息",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/data.ExperimentStepData"
                     }
+                }
+            }
+        },
+        "data.ExperimentDeleteRequest": {
+            "type": "object",
+            "properties": {
+                "experimentId": {
+                    "description": "experimentId 实验编号，必填，UUID格式\n唯一标识要删除的实验，格式必须为UUID4",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
                 }
             }
         },
@@ -382,6 +577,26 @@ const docTemplate = `{
                 }
             }
         },
+        "data.ExperimentUpdateRequest": {
+            "type": "object",
+            "required": [
+                "experimentId"
+            ],
+            "properties": {
+                "experimentId": {
+                    "description": "ExperimentID string 实验ID\n唯一标识实验的 UUID，必填，用于确定要更新的实验记录\n示例值: \"123e4567-e89b-12d3-a456-426614174000\"",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "experimentName": {
+                    "description": "ExperimentName string 实验名称\n实验的名称，选填；如果填写，名称长度限制为 2-128 字符\n支持中文、英文、数字及特殊字符\n示例值: \"实验名称\"",
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 2,
+                    "example": "实验名称"
+                }
+            }
+        },
         "data.MaterialData": {
             "type": "object",
             "properties": {
@@ -426,6 +641,124 @@ const docTemplate = `{
                     "description": "Proportion float64 材料组占比\n材料组在实验步骤中的占比，百分比形式",
                     "type": "number",
                     "example": 25.5
+                }
+            }
+        },
+        "data.PredictionData": {
+            "type": "object",
+            "properties": {
+                "accuracy": {
+                    "description": "Accuracy float64 准确率\n实验结果预测的准确率 0~100",
+                    "type": "number",
+                    "example": 25.5
+                },
+                "fileName": {
+                    "description": "fileName string 文件名称\n实验结果预测的数据来源",
+                    "type": "string",
+                    "example": "来源文件名称"
+                },
+                "resultValue": {
+                    "description": "ResultValue string 实验条件\n步骤对应的实验结果",
+                    "type": "string",
+                    "example": "步骤结果值"
+                },
+                "stepName": {
+                    "description": "StepName string 步骤名称\n描述实验步骤的名称",
+                    "type": "string",
+                    "example": "步骤名称"
+                }
+            }
+        },
+        "data.PredictionDemoRequest": {
+            "type": "object",
+            "properties": {
+                "experimentCondition": {
+                    "description": "ExperimentCondition string 实验条件\n步骤对应的实验条件描述",
+                    "type": "string",
+                    "example": "实验条件"
+                },
+                "materialGroups": {
+                    "description": "MaterialGroups []MaterialGroupData 材料组\n该步骤中涉及的材料组信息",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.MaterialGroupData"
+                    }
+                },
+                "stepName": {
+                    "description": "StepName string 步骤名称\n描述实验步骤的名称",
+                    "type": "string",
+                    "example": "步骤名称"
+                }
+            }
+        },
+        "data.PredictionDemoResponse": {
+            "type": "object",
+            "properties": {
+                "accuracy": {
+                    "description": "Accuracy float64 准确率\n实验结果预测的准确率 0~100",
+                    "type": "number",
+                    "example": 25.5
+                },
+                "fileName": {
+                    "description": "fileName string 文件名称\n实验结果预测的数据来源",
+                    "type": "string",
+                    "example": "来源文件名称"
+                },
+                "resultValue": {
+                    "description": "ResultValue string 实验条件\n步骤对应的实验结果",
+                    "type": "string",
+                    "example": "步骤结果值"
+                },
+                "stepName": {
+                    "description": "StepName string 步骤名称\n描述实验步骤的名称",
+                    "type": "string",
+                    "example": "步骤名称"
+                }
+            }
+        },
+        "data.PredictionRequest": {
+            "type": "object",
+            "properties": {
+                "steps": {
+                    "description": "Steps []PredictionStepData 实验步骤\n包含该实验的步骤信息",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.PredictionStepData"
+                    }
+                }
+            }
+        },
+        "data.PredictionResponse": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "description": "List []PredictionData 数据\n返回的实验记录结果",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.PredictionData"
+                    }
+                }
+            }
+        },
+        "data.PredictionStepData": {
+            "type": "object",
+            "properties": {
+                "experimentCondition": {
+                    "description": "ExperimentCondition string 实验条件\n步骤对应的实验条件描述",
+                    "type": "string",
+                    "example": "实验条件"
+                },
+                "materialGroups": {
+                    "description": "MaterialGroups []MaterialGroupData 材料组\n该步骤中涉及的材料组信息",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.MaterialGroupData"
+                    }
+                },
+                "stepName": {
+                    "description": "StepName string 步骤名称\n描述实验步骤的名称",
+                    "type": "string",
+                    "example": "步骤名称"
                 }
             }
         },
