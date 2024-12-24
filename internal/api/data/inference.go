@@ -16,9 +16,9 @@ func NewInferenceApi() *InferenceApi {
 	return &InferenceApi{service: service}
 }
 
-// Prediction 根据配方推荐材料
-// @Summary 根据配方推荐材料
-// @Description 通过提供的配方信息，预测并推荐适合的材料
+// Prediction 根据配方预测实验结果
+// @Summary 根据配方预测实验结果
+// @Description 通过提供的配方信息，预测实验结果
 // @Tags 模型预测
 // @Accept json
 // @Produce json
@@ -33,8 +33,8 @@ func (api InferenceApi) Prediction(ctx *gin.Context, req *data.PredictionRequest
 	return
 }
 
-// PredictionDemo 根据配方推荐材料（Demo）
-// @Summary 根据配方推荐材料（Demo）
+// PredictionDemo 根据配方预测实验结果（Demo）
+// @Summary 根据配方预测实验结果（Demo）
 // @Description 演示版本的配方推荐功能，提供简单的预测功能
 // @Tags 模型预测
 // @Accept json

@@ -16,8 +16,22 @@ func NewInferenceService() *InferenceService {
 func (is *InferenceService) Prediction(ctx context.Context, req *data.PredictionRequest) (*data.PredictionResponse,
 	error) {
 
+	if req == nil || len(req.Steps) == 0 {
+		return nil, nil
+	}
+
+	list := make([]data.PredictionData, len(req.Steps))
+	for k, v := range req.Steps {
+		list[k] = data.PredictionData{
+			FileName:    "demo.xlsx",
+			StepName:    v.StepName,
+			Accuracy:    25.50,
+			ResultValue: "123",
+		}
+	}
+
 	// 返回最终结果
-	return &data.PredictionResponse{}, nil
+	return &data.PredictionResponse{List: list}, nil
 }
 
 // PredictionDemo 根据配方推荐材料
