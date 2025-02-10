@@ -72,6 +72,13 @@ func (ed *ExperimentDao) DeleteByID(ctx context.Context, id string) error {
 		Delete(&entity.Experiment{}).Error
 }
 
+// DeleteByIDTx 删除实验记录(处理事务)
+func (ed *ExperimentDao) DeleteByIDTx(ctx context.Context, tx *gorm.DB, id string) error {
+	return tx.WithContext(ctx).
+		Where(entity.ExperimentColumns.ID+" = ?", id).
+		Delete(&entity.Experiment{}).Error
+}
+
 // UpdateLastUpdatedTime 更新实验的最后更新时间
 func (ed *ExperimentDao) UpdateLastUpdatedTime(ctx context.Context, id string) error {
 	return db.Client.WithContext(ctx).
@@ -91,7 +98,7 @@ func (ed *ExperimentDao) Query(ctx context.Context, page int, pageSize int,
 
 	// 定义需要使用 LIKE 查询的字段
 	likeFields := []string{
-		entity.ExperimentColumns.ExperimentName,
+		entity.ExperimentColumns.Experimenter,
 	}
 
 	query := db.Client.WithContext(ctx).Model(&entity.Experiment{})

@@ -9,14 +9,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type SampleApi struct {
-	service *service.SampleService
+type ExperimentApi struct {
+	service *service.ExperimentService
 }
 
-// NewSampleApi 创建 SampleApi 实例并初始化依赖项
-func NewSampleApi() *SampleApi {
-	service := service.NewSampleService()
-	return &SampleApi{service: service}
+// NewExperimentApi 创建 ExperimentApi 实例并初始化依赖项
+func NewExperimentApi() *ExperimentApi {
+	service := service.NewExperimentService()
+	return &ExperimentApi{service: service}
 }
 
 // Import 导入文件
@@ -29,8 +29,14 @@ func NewSampleApi() *SampleApi {
 // @Success 200 {object} dto.Empty "文件导入成功，返回空对象表示操作成功"
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，可能是文件上传失败或格式不符合要求"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能是文件解析或存储过程中出现异常"
-// @Router /data/sample/import [post]
-func (api *SampleApi) Import(ctx *gin.Context, req *dto.Empty) (res *dto.Empty, err error) {
+// @Router /data/experiment/import [post]
+func (api *ExperimentApi) Import(ctx *gin.Context, req *dto.Empty) (res *dto.Empty, err error) {
+	userId, exists := ctx.Get("userId")
+	if !exists {
+		logger.Logger.Errorf("[Import] User id does not exist")
+		return nil, utils.NewBusinessError(utils.UserNotFoundCode)
+	}
+
 	// 获取文件
 	file, err := ctx.FormFile("file")
 	if err != nil {
@@ -44,7 +50,7 @@ func (api *SampleApi) Import(ctx *gin.Context, req *dto.Empty) (res *dto.Empty, 
 		return nil, utils.NewBusinessError(utils.FileTooLargeCode)
 	}
 
-	res, err = api.service.Import(ctx, file)
+	res, err = api.service.Import(ctx, userId.(string), file)
 	if err != nil {
 		logger.Logger.Errorf("[Import] Import Error: %v", err)
 		return nil, utils.NewBusinessError(utils.FileParsingFailedCode)
@@ -63,8 +69,8 @@ func (api *SampleApi) Import(ctx *gin.Context, req *dto.Empty) (res *dto.Empty, 
 // @Success 200 {object} data.ExperimentListResponse "成功获取实验列表，返回实验数据"
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，如分页参数错误、筛选条件不符合要求"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能是数据库查询出错等情况"
-// @Router /data/sample [get]
-func (api *SampleApi) List(ctx *gin.Context, req *data.ExperimentListRequest) (res *data.ExperimentListResponse, err error) {
+// @Router /data/experiment [get]
+func (api *ExperimentApi) List(ctx *gin.Context, req *data.ExperimentListRequest) (res *data.ExperimentListResponse, err error) {
 	res, err = api.service.List(ctx, req)
 	if err != nil {
 		logger.Logger.Errorf("[List] List Error: %v", err)
@@ -83,10 +89,52 @@ func (api *SampleApi) List(ctx *gin.Context, req *data.ExperimentListRequest) (r
 // @Success 200 {object} dto.Empty "成功删除实验"
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，如实验ID不存在或格式无效"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能是数据库删除失败等情况"
-// @Router /data/sample [delete]
-func (api *SampleApi) Delete(ctx *gin.Context, req *data.ExperimentDeleteRequest) (res *dto.Empty, err error) {
+// @Router /data/experiment [delete]
+func (api *ExperimentApi) Delete(ctx *gin.Context, req *data.ExperimentDeleteRequest) (res *dto.Empty, err error) {
 	res, err = api.service.Delete(ctx, req)
 	return
+}
+
+// Add 添加实验信息
+// @Summary 添加新的实验信息
+// @Description 根据提供的实验信息创建新的实验记录
+// @Tags 实验管理
+// @Accept json
+// @Produce json
+// @Param req body data.ExperimentAddRequest true "请求参数，包含新的实验信息"
+// @Success 200 {object} dto.Empty "成功添加实验信息"
+// @Failure 400 {object} dto.ErrorResponse "请求参数错误，如缺少必要字段或格式不正确"
+// @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能是数据库插入失败等情况"
+// @Router /data/experiment [post]
+func (api *ExperimentApi) Add(ctx *gin.Context, req *data.ExperimentAddRequest) (res *dto.Empty, err error) {
+	userId, exists := ctx.Get("userId")
+	if !exists {
+		logger.Logger.Errorf("[Import] User id does not exist")
+		return nil, utils.NewBusinessError(utils.UserNotFoundCode)
+	}
+
+	// 百分比校验
+	var totalProportion, totalPercentage float64
+	for _, step := range req.Steps {
+		for _, group := range step.MaterialGroups {
+			totalProportion += group.Proportion
+			for _, material := range group.Materials {
+				totalPercentage += material.Percentage
+			}
+			if totalPercentage != 100 {
+				return nil, utils.NewBusinessError(utils.MaterialProportionSumNot100Code)
+			}
+			totalPercentage = 0
+		}
+		if totalProportion != 100 {
+			return nil, utils.NewBusinessError(utils.MaterialGroupProportionNot100Code)
+		}
+		totalProportion = 0
+	}
+
+	// 调用服务层的 Add 方法进行实验数据插入
+	res, err = api.service.Add(ctx, userId.(string), req)
+	return res, err
 }
 
 // Edit 修改实验信息
@@ -99,8 +147,8 @@ func (api *SampleApi) Delete(ctx *gin.Context, req *data.ExperimentDeleteRequest
 // @Success 200 {object} dto.Empty "成功修改实验信息"
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，如实验ID不存在或修改内容无效"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能是数据库更新失败等情况"
-// @Router /data/sample [put]
-func (api *SampleApi) Edit(ctx *gin.Context, req *data.ExperimentUpdateRequest) (res *dto.Empty, err error) {
+// @Router /data/experiment [put]
+func (api *ExperimentApi) Edit(ctx *gin.Context, req *data.ExperimentUpdateRequest) (res *dto.Empty, err error) {
 	res, err = api.service.Edit(ctx, req)
 	return
 }

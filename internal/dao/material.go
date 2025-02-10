@@ -71,6 +71,13 @@ func (md *MaterialDao) DeleteByGroupID(ctx context.Context, groupID string) erro
 		Delete(&entity.Materials{}).Error
 }
 
+// DeleteByGroupIdListTx 删除某个材料组内的所有材料
+func (md *MaterialDao) DeleteByGroupIdListTx(ctx context.Context, tx *gorm.DB, groupIdList []string) error {
+	return tx.WithContext(ctx).
+		Where(entity.MaterialsColumns.ExperimentMaterialGroupID+" in ?", groupIdList).
+		Delete(&entity.Materials{}).Error
+}
+
 // Query 分页查询材料
 func (md *MaterialDao) Query(ctx context.Context, page int, pageSize int,
 	filters map[string]interface{}) ([]*entity.Materials, int64, error) {

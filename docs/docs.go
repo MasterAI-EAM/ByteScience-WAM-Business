@@ -67,7 +67,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/data/sample": {
+        "/data/experiment": {
             "get": {
                 "description": "根据分页请求获取实验列表，支持按实验名称进行筛选",
                 "consumes": [
@@ -156,6 +156,50 @@ const docTemplate = `{
                     }
                 }
             },
+            "post": {
+                "description": "根据提供的实验信息创建新的实验记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "实验管理"
+                ],
+                "summary": "添加新的实验信息",
+                "parameters": [
+                    {
+                        "description": "请求参数，包含新的实验信息",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.ExperimentAddRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功添加实验信息",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Empty"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，如缺少必要字段或格式不正确",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是数据库插入失败等情况",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "description": "根据实验ID删除实验",
                 "consumes": [
@@ -201,7 +245,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/data/sample/import": {
+        "/data/experiment/import": {
             "post": {
                 "description": "接收上传的文件并处理，根据业务需求进行相关文件解析和导入",
                 "consumes": [
@@ -238,6 +282,98 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "服务器内部错误，可能是文件解析或存储过程中出现异常",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/data/inference/prediction": {
+            "post": {
+                "description": "通过提供的配方信息，预测实验结果",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "模型预测"
+                ],
+                "summary": "根据配方预测实验结果",
+                "parameters": [
+                    {
+                        "description": "配方推荐请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.PredictionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "推荐成功，返回推荐的材料列表",
+                        "schema": {
+                            "$ref": "#/definitions/data.PredictionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，可能是配方信息不完整或格式不正确",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是预测服务异常",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/data/inference/prediction/demo": {
+            "post": {
+                "description": "演示版本的配方推荐功能，提供简单的预测功能",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "模型预测"
+                ],
+                "summary": "根据配方预测实验结果（Demo）",
+                "parameters": [
+                    {
+                        "description": "配方推荐演示请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.PredictionDemoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "演示推荐成功，返回推荐的材料示例",
+                        "schema": {
+                            "$ref": "#/definitions/data.PredictionDemoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，可能是配方信息不完整或格式不正确",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是演示服务异常",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -284,98 +420,6 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "服务器内部错误，可能是数据库查询出错、验证逻辑异常等情况",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/inference/prediction": {
-            "post": {
-                "description": "通过提供的配方信息，预测并推荐适合的材料",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "模型预测"
-                ],
-                "summary": "根据配方推荐材料",
-                "parameters": [
-                    {
-                        "description": "配方推荐请求参数",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/data.PredictionRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "推荐成功，返回推荐的材料列表",
-                        "schema": {
-                            "$ref": "#/definitions/data.PredictionResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误，可能是配方信息不完整或格式不正确",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误，可能是预测服务异常",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/inference/prediction/demo": {
-            "post": {
-                "description": "演示版本的配方推荐功能，提供简单的预测功能",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "模型预测"
-                ],
-                "summary": "根据配方推荐材料（Demo）",
-                "parameters": [
-                    {
-                        "description": "配方推荐演示请求参数",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/data.PredictionDemoRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "演示推荐成功，返回推荐的材料示例",
-                        "schema": {
-                            "$ref": "#/definitions/data.PredictionDemoResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误，可能是配方信息不完整或格式不正确",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误，可能是演示服务异常",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -455,9 +499,66 @@ const docTemplate = `{
                 }
             }
         },
+        "data.ExperimentAddRequest": {
+            "type": "object",
+            "properties": {
+                "endTime": {
+                    "description": "EndTime string 实验结束时间\n选填，格式为 \"2006-01-02T15:04:05Z\"（RFC3339 格式）\n示例值: \"2024-02-05T18:00:00Z\"",
+                    "type": "string",
+                    "example": "2024-02-05T18:00:00Z"
+                },
+                "experimentName": {
+                    "description": "ExperimentName string 实验名称\n实验的名称，选填；如果填写，名称长度限制为 2-128 字符\n支持中文、英文、数字及特殊字符\n示例值: \"实验名称\"",
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 2,
+                    "example": "实验名称"
+                },
+                "experimenter": {
+                    "description": "Experimenter string 实验者\n实验的负责人，选填；如果填写，名称长度限制为 1-128 字符\n示例值: \"张三\"",
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "example": "张三"
+                },
+                "sort": {
+                    "description": "Sort int 排序 优先级从大到小\n选填，必须是大于等于 0 的整数\n示例值: 1",
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 1
+                },
+                "startTime": {
+                    "description": "StartTime string 实验开始时间\n选填，格式为 \"2006-01-02T15:04:05Z\"（RFC3339 格式）\n示例值: \"2024-02-05T08:30:00Z\"",
+                    "type": "string",
+                    "example": "2024-02-05T08:30:00Z"
+                },
+                "steps": {
+                    "description": "Steps []ExperimentStepAdd 实验步骤列表\n选填，包含该实验的所有步骤信息，每个步骤包含名称、描述、实验条件、结果值及材料组等\n示例值: [{\"stepName\": \"步骤名称\", \"stepNameDescription\": \"实验步骤描述\", \"experimentCondition\": \"实验条件\", \"resultValue\": \"步骤结果值\", \"materialGroups\": []}]",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.ExperimentStepAdd"
+                    }
+                }
+            }
+        },
         "data.ExperimentData": {
             "type": "object",
             "properties": {
+                "createdAt": {
+                    "description": "CreatedAt 创建时间\n格式为时间戳，创建时间",
+                    "type": "string",
+                    "example": "2024-11-18T10:00:00Z"
+                },
+                "endTime": {
+                    "description": "EndTime 实验结束时间\n格式为时间戳，实验结束时间",
+                    "type": "string",
+                    "example": "2024-11-18T10:00:00Z"
+                },
+                "entryCategory": {
+                    "description": "EntryCategory int8 录入类别\n1 表示文件导入，2 表示页面输入",
+                    "type": "integer",
+                    "example": 1
+                },
                 "experimentId": {
                     "description": "ExperimentID string 实验ID\n唯一标识实验的UUID",
                     "type": "string",
@@ -467,6 +568,11 @@ const docTemplate = `{
                     "description": "ExperimentName string 实验名称\n实验的名称信息",
                     "type": "string",
                     "example": "实验名称"
+                },
+                "experimenter": {
+                    "description": "Experimenter string 实验者\n进行实验的人员名称",
+                    "type": "string",
+                    "example": "张三"
                 },
                 "fileId": {
                     "description": "FileID string 文件ID\n关联的文件资源ID",
@@ -478,12 +584,22 @@ const docTemplate = `{
                     "type": "string",
                     "example": "240628AI模型数据200组 含FRP性能-(对外）FD"
                 },
+                "startTime": {
+                    "description": "StartTime 实验开始时间\n格式为时间戳，实验开始时间",
+                    "type": "string",
+                    "example": "2024-11-18T10:00:00Z"
+                },
                 "steps": {
                     "description": "Steps []ExperimentStepData 实验步骤\n包含该实验的步骤信息",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/data.ExperimentStepData"
                     }
+                },
+                "userId": {
+                    "description": "UserID string 操作用户ID\n记录操作该实验的用户 ID",
+                    "type": "string",
+                    "example": "987e6543-d21b-34c5-a654-123456789abc"
                 }
             }
         },
@@ -506,6 +622,13 @@ const docTemplate = `{
                     "maxLength": 128,
                     "minLength": 2,
                     "example": "实验名称"
+                },
+                "experimenter": {
+                    "description": "Experimenter string 实验者，选填，长度限制：2-128字符\n进行实验的人员名称",
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "example": "张三"
                 },
                 "page": {
                     "description": "Page 页码，选填，范围限制：[1,10000]\n用于分页查询管理员列表，最小值为1，最大值为10000",
@@ -540,8 +663,53 @@ const docTemplate = `{
                 }
             }
         },
+        "data.ExperimentStepAdd": {
+            "type": "object",
+            "required": [
+                "resultValue",
+                "stepName",
+                "stepOrder"
+            ],
+            "properties": {
+                "experimentCondition": {
+                    "description": "ExperimentCondition string 实验条件\n选填，实验步骤的实验条件描述，最长 255 字符\n示例值: \"实验条件\"",
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "实验条件"
+                },
+                "materialGroups": {
+                    "description": "MaterialGroups []MaterialGroupAdd 材料组列表\n选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)\n示例值: [{\"materialGroupName\": \"材料组名称\", \"proportion\": 25.5, \"materials\": []}]",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.MaterialGroupAdd"
+                    }
+                },
+                "resultValue": {
+                    "description": "ResultValue string 步骤结果值\n选填，实验步骤的结果值，最长 256 字符\n示例值: \"步骤结果值\"",
+                    "type": "string",
+                    "maxLength": 256,
+                    "example": "步骤结果值"
+                },
+                "stepName": {
+                    "description": "StepName string 步骤名称\n实验步骤的名称，必填，限制长度为 1-255 字符\n示例值: \"步骤名称\"",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "example": "步骤名称"
+                },
+                "stepOrder": {
+                    "description": "StepOrder int 排序(从大到小)\n必填，实验步骤的执行排序(从大到小)，必须为正整数\n示例值: 1",
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 1
+                }
+            }
+        },
         "data.ExperimentStepData": {
             "type": "object",
+            "required": [
+                "stepOrder"
+            ],
             "properties": {
                 "experimentCondition": {
                     "description": "ExperimentCondition string 实验条件\n步骤对应的实验条件描述",
@@ -574,6 +742,54 @@ const docTemplate = `{
                     "description": "StepNameDescription string 实验步骤描述\n实验步骤描述",
                     "type": "string",
                     "example": "实验步骤描述"
+                },
+                "stepOrder": {
+                    "description": "StepOrder int 排序(从大到小)\n实验步骤的执行排序(从大到小)\n示例值: 1",
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 1
+                }
+            }
+        },
+        "data.ExperimentStepUpdate": {
+            "type": "object",
+            "required": [
+                "resultValue",
+                "stepName",
+                "stepOrder"
+            ],
+            "properties": {
+                "experimentCondition": {
+                    "description": "ExperimentCondition string 实验条件\n选填，实验步骤的实验条件描述，最长 255 字符\n示例值: \"实验条件\"",
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "实验条件"
+                },
+                "materialGroups": {
+                    "description": "MaterialGroups []MaterialGroupUpdate 材料组列表\n选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)\n示例值: [{\"materialGroupName\": \"材料组名称\", \"proportion\": 25.5, \"materials\": []}]",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.MaterialGroupUpdate"
+                    }
+                },
+                "resultValue": {
+                    "description": "ResultValue string 步骤结果值\n选填，实验步骤的结果值，最长 256 字符\n示例值: \"步骤结果值\"",
+                    "type": "string",
+                    "maxLength": 256,
+                    "example": "步骤结果值"
+                },
+                "stepName": {
+                    "description": "StepName string 步骤名称\n实验步骤的名称，必填，限制长度为 1-255 字符\n示例值: \"步骤名称\"",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "example": "步骤名称"
+                },
+                "stepOrder": {
+                    "description": "StepOrder int 排序(从大到小)\n必填，实验步骤的执行排序(从大到小)，必须为正整数\n示例值: 1",
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 1
                 }
             }
         },
@@ -583,6 +799,11 @@ const docTemplate = `{
                 "experimentId"
             ],
             "properties": {
+                "endTime": {
+                    "description": "EndTime string 实验结束时间\n选填，格式为 \"2006-01-02T15:04:05Z\"（RFC3339 格式）\n示例值: \"2024-02-05T18:00:00Z\"",
+                    "type": "string",
+                    "example": "2024-02-05T18:00:00Z"
+                },
                 "experimentId": {
                     "description": "ExperimentID string 实验ID\n唯一标识实验的 UUID，必填，用于确定要更新的实验记录\n示例值: \"123e4567-e89b-12d3-a456-426614174000\"",
                     "type": "string",
@@ -594,6 +815,48 @@ const docTemplate = `{
                     "maxLength": 128,
                     "minLength": 2,
                     "example": "实验名称"
+                },
+                "experimenter": {
+                    "description": "Experimenter string 实验者\n实验的负责人，选填；如果填写，名称长度限制为 1-128 字符\n示例值: \"张三\"",
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 1,
+                    "example": "张三"
+                },
+                "startTime": {
+                    "description": "StartTime string 实验开始时间\n选填，格式为 \"2006-01-02T15:04:05Z\"（RFC3339 格式）\n示例值: \"2024-02-05T08:30:00Z\"",
+                    "type": "string",
+                    "example": "2024-02-05T08:30:00Z"
+                },
+                "steps": {
+                    "description": "Steps []ExperimentStepUpdate 实验步骤列表\n选填，包含该实验的所有步骤信息，每个步骤包含名称、描述、实验条件、结果值及材料组等\n示例值: [{\"stepName\": \"步骤名称\", \"stepNameDescription\": \"实验步骤描述\", \"experimentCondition\": \"实验条件\", \"resultValue\": \"步骤结果值\", \"materialGroups\": []}]",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.ExperimentStepUpdate"
+                    }
+                }
+            }
+        },
+        "data.MaterialAdd": {
+            "type": "object",
+            "required": [
+                "materialName",
+                "percentage"
+            ],
+            "properties": {
+                "materialName": {
+                    "description": "MaterialName string 材料名称\n必填，材料的名称，最长 255 字符\n示例值: \"材料名称\"",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "example": "材料名称"
+                },
+                "percentage": {
+                    "description": "Percentage float64 材料占比\n必填，材料在材料组中的占比，范围 0-100\n示例值: 60.00",
+                    "type": "number",
+                    "maximum": 100,
+                    "minimum": 0,
+                    "example": 60
                 }
             }
         },
@@ -614,6 +877,36 @@ const docTemplate = `{
                     "description": "Percentage float64 材料占比\n材料在材料组中的占比，百分比形式",
                     "type": "number",
                     "example": 60
+                }
+            }
+        },
+        "data.MaterialGroupAdd": {
+            "type": "object",
+            "required": [
+                "materialGroupName",
+                "proportion"
+            ],
+            "properties": {
+                "materialGroupName": {
+                    "description": "MaterialGroupName string 材料组名称\n必填，材料组的名称，最长 255 字符\n示例值: \"材料组名称\"",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "example": "材料组名称"
+                },
+                "materials": {
+                    "description": "Materials []MaterialAdd 材料列表\n选填，材料组内的具体材料信息, percentage的和为100(占比100%)\n示例值: [{\"materialName\": \"材料名称\", \"percentage\": 60.00}]",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.MaterialAdd"
+                    }
+                },
+                "proportion": {
+                    "description": "Proportion float64 材料组占比\n必填，材料组在实验步骤中的占比，范围 0-100\n示例值: 25.50",
+                    "type": "number",
+                    "maximum": 100,
+                    "minimum": 0,
+                    "example": 25.5
                 }
             }
         },
@@ -641,6 +934,59 @@ const docTemplate = `{
                     "description": "Proportion float64 材料组占比\n材料组在实验步骤中的占比，百分比形式",
                     "type": "number",
                     "example": 25.5
+                }
+            }
+        },
+        "data.MaterialGroupUpdate": {
+            "type": "object",
+            "required": [
+                "materialGroupName",
+                "proportion"
+            ],
+            "properties": {
+                "materialGroupName": {
+                    "description": "MaterialGroupName string 材料组名称\n必填，材料组的名称，最长 255 字符\n示例值: \"材料组名称\"",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "example": "材料组名称"
+                },
+                "materials": {
+                    "description": "Materials []MaterialUpdate 材料列表\n选填，材料组内的具体材料信息, percentage的和为100(占比100%)\n示例值: [{\"materialName\": \"材料名称\", \"percentage\": 60.00}]",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.MaterialUpdate"
+                    }
+                },
+                "proportion": {
+                    "description": "Proportion float64 材料组占比\n必填，材料组在实验步骤中的占比，范围 0-100\n示例值: 25.50",
+                    "type": "number",
+                    "maximum": 100,
+                    "minimum": 0,
+                    "example": 25.5
+                }
+            }
+        },
+        "data.MaterialUpdate": {
+            "type": "object",
+            "required": [
+                "materialName",
+                "percentage"
+            ],
+            "properties": {
+                "materialName": {
+                    "description": "MaterialName string 材料名称\n必填，材料的名称，最长 255 字符\n示例值: \"材料名称\"",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "example": "材料名称"
+                },
+                "percentage": {
+                    "description": "Percentage float64 材料占比\n必填，材料在材料组中的占比，范围 0-100\n示例值: 60.00",
+                    "type": "number",
+                    "maximum": 100,
+                    "minimum": 0,
+                    "example": 60
                 }
             }
         },

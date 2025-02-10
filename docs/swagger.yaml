@@ -54,8 +54,78 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwOTkwMTQsImlhdCI6MTczMjA5OTAxNCwidXNlcklkIjoiMmE1ZWVkNDItMjVhMy00MGJlLTlmY2QtNjEzMmJlYzgzNTE3In0.YyrvQS66uYNVtCKKi7rm7xqJrCIFSq12SXCJcqAxKso
         type: string
     type: object
+  data.ExperimentAddRequest:
+    properties:
+      endTime:
+        description: |-
+          EndTime string 实验结束时间
+          选填，格式为 "2006-01-02T15:04:05Z"（RFC3339 格式）
+          示例值: "2024-02-05T18:00:00Z"
+        example: "2024-02-05T18:00:00Z"
+        type: string
+      experimentName:
+        description: |-
+          ExperimentName string 实验名称
+          实验的名称，选填；如果填写，名称长度限制为 2-128 字符
+          支持中文、英文、数字及特殊字符
+          示例值: "实验名称"
+        example: 实验名称
+        maxLength: 128
+        minLength: 2
+        type: string
+      experimenter:
+        description: |-
+          Experimenter string 实验者
+          实验的负责人，选填；如果填写，名称长度限制为 1-128 字符
+          示例值: "张三"
+        example: 张三
+        maxLength: 128
+        minLength: 1
+        type: string
+      sort:
+        description: |-
+          Sort int 排序 优先级从大到小
+          选填，必须是大于等于 0 的整数
+          示例值: 1
+        example: 1
+        minimum: 0
+        type: integer
+      startTime:
+        description: |-
+          StartTime string 实验开始时间
+          选填，格式为 "2006-01-02T15:04:05Z"（RFC3339 格式）
+          示例值: "2024-02-05T08:30:00Z"
+        example: "2024-02-05T08:30:00Z"
+        type: string
+      steps:
+        description: |-
+          Steps []ExperimentStepAdd 实验步骤列表
+          选填，包含该实验的所有步骤信息，每个步骤包含名称、描述、实验条件、结果值及材料组等
+          示例值: [{"stepName": "步骤名称", "stepNameDescription": "实验步骤描述", "experimentCondition": "实验条件", "resultValue": "步骤结果值", "materialGroups": []}]
+        items:
+          $ref: '#/definitions/data.ExperimentStepAdd'
+        type: array
+    type: object
   data.ExperimentData:
     properties:
+      createdAt:
+        description: |-
+          CreatedAt 创建时间
+          格式为时间戳，创建时间
+        example: "2024-11-18T10:00:00Z"
+        type: string
+      endTime:
+        description: |-
+          EndTime 实验结束时间
+          格式为时间戳，实验结束时间
+        example: "2024-11-18T10:00:00Z"
+        type: string
+      entryCategory:
+        description: |-
+          EntryCategory int8 录入类别
+          1 表示文件导入，2 表示页面输入
+        example: 1
+        type: integer
       experimentId:
         description: |-
           ExperimentID string 实验ID
@@ -67,6 +137,12 @@ definitions:
           ExperimentName string 实验名称
           实验的名称信息
         example: 实验名称
+        type: string
+      experimenter:
+        description: |-
+          Experimenter string 实验者
+          进行实验的人员名称
+        example: 张三
         type: string
       fileId:
         description: |-
@@ -80,6 +156,12 @@ definitions:
           关联的文件资源ID
         example: 240628AI模型数据200组 含FRP性能-(对外）FD
         type: string
+      startTime:
+        description: |-
+          StartTime 实验开始时间
+          格式为时间戳，实验开始时间
+        example: "2024-11-18T10:00:00Z"
+        type: string
       steps:
         description: |-
           Steps []ExperimentStepData 实验步骤
@@ -87,6 +169,12 @@ definitions:
         items:
           $ref: '#/definitions/data.ExperimentStepData'
         type: array
+      userId:
+        description: |-
+          UserID string 操作用户ID
+          记录操作该实验的用户 ID
+        example: 987e6543-d21b-34c5-a654-123456789abc
+        type: string
     type: object
   data.ExperimentDeleteRequest:
     properties:
@@ -106,6 +194,14 @@ definitions:
         example: 实验名称
         maxLength: 128
         minLength: 2
+        type: string
+      experimenter:
+        description: |-
+          Experimenter string 实验者，选填，长度限制：2-128字符
+          进行实验的人员名称
+        example: 张三
+        maxLength: 128
+        minLength: 1
         type: string
       page:
         description: |-
@@ -139,6 +235,54 @@ definitions:
           返回符合条件的实验记录总数
         example: 100
         type: integer
+    type: object
+  data.ExperimentStepAdd:
+    properties:
+      experimentCondition:
+        description: |-
+          ExperimentCondition string 实验条件
+          选填，实验步骤的实验条件描述，最长 255 字符
+          示例值: "实验条件"
+        example: 实验条件
+        maxLength: 255
+        type: string
+      materialGroups:
+        description: |-
+          MaterialGroups []MaterialGroupAdd 材料组列表
+          选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)
+          示例值: [{"materialGroupName": "材料组名称", "proportion": 25.5, "materials": []}]
+        items:
+          $ref: '#/definitions/data.MaterialGroupAdd'
+        type: array
+      resultValue:
+        description: |-
+          ResultValue string 步骤结果值
+          选填，实验步骤的结果值，最长 256 字符
+          示例值: "步骤结果值"
+        example: 步骤结果值
+        maxLength: 256
+        type: string
+      stepName:
+        description: |-
+          StepName string 步骤名称
+          实验步骤的名称，必填，限制长度为 1-255 字符
+          示例值: "步骤名称"
+        example: 步骤名称
+        maxLength: 255
+        minLength: 1
+        type: string
+      stepOrder:
+        description: |-
+          StepOrder int 排序(从大到小)
+          必填，实验步骤的执行排序(从大到小)，必须为正整数
+          示例值: 1
+        example: 1
+        minimum: 1
+        type: integer
+    required:
+    - resultValue
+    - stepName
+    - stepOrder
     type: object
   data.ExperimentStepData:
     properties:
@@ -179,9 +323,74 @@ definitions:
           实验步骤描述
         example: 实验步骤描述
         type: string
+      stepOrder:
+        description: |-
+          StepOrder int 排序(从大到小)
+          实验步骤的执行排序(从大到小)
+          示例值: 1
+        example: 1
+        minimum: 1
+        type: integer
+    required:
+    - stepOrder
+    type: object
+  data.ExperimentStepUpdate:
+    properties:
+      experimentCondition:
+        description: |-
+          ExperimentCondition string 实验条件
+          选填，实验步骤的实验条件描述，最长 255 字符
+          示例值: "实验条件"
+        example: 实验条件
+        maxLength: 255
+        type: string
+      materialGroups:
+        description: |-
+          MaterialGroups []MaterialGroupUpdate 材料组列表
+          选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)
+          示例值: [{"materialGroupName": "材料组名称", "proportion": 25.5, "materials": []}]
+        items:
+          $ref: '#/definitions/data.MaterialGroupUpdate'
+        type: array
+      resultValue:
+        description: |-
+          ResultValue string 步骤结果值
+          选填，实验步骤的结果值，最长 256 字符
+          示例值: "步骤结果值"
+        example: 步骤结果值
+        maxLength: 256
+        type: string
+      stepName:
+        description: |-
+          StepName string 步骤名称
+          实验步骤的名称，必填，限制长度为 1-255 字符
+          示例值: "步骤名称"
+        example: 步骤名称
+        maxLength: 255
+        minLength: 1
+        type: string
+      stepOrder:
+        description: |-
+          StepOrder int 排序(从大到小)
+          必填，实验步骤的执行排序(从大到小)，必须为正整数
+          示例值: 1
+        example: 1
+        minimum: 1
+        type: integer
+    required:
+    - resultValue
+    - stepName
+    - stepOrder
     type: object
   data.ExperimentUpdateRequest:
     properties:
+      endTime:
+        description: |-
+          EndTime string 实验结束时间
+          选填，格式为 "2006-01-02T15:04:05Z"（RFC3339 格式）
+          示例值: "2024-02-05T18:00:00Z"
+        example: "2024-02-05T18:00:00Z"
+        type: string
       experimentId:
         description: |-
           ExperimentID string 实验ID
@@ -199,8 +408,56 @@ definitions:
         maxLength: 128
         minLength: 2
         type: string
+      experimenter:
+        description: |-
+          Experimenter string 实验者
+          实验的负责人，选填；如果填写，名称长度限制为 1-128 字符
+          示例值: "张三"
+        example: 张三
+        maxLength: 128
+        minLength: 1
+        type: string
+      startTime:
+        description: |-
+          StartTime string 实验开始时间
+          选填，格式为 "2006-01-02T15:04:05Z"（RFC3339 格式）
+          示例值: "2024-02-05T08:30:00Z"
+        example: "2024-02-05T08:30:00Z"
+        type: string
+      steps:
+        description: |-
+          Steps []ExperimentStepUpdate 实验步骤列表
+          选填，包含该实验的所有步骤信息，每个步骤包含名称、描述、实验条件、结果值及材料组等
+          示例值: [{"stepName": "步骤名称", "stepNameDescription": "实验步骤描述", "experimentCondition": "实验条件", "resultValue": "步骤结果值", "materialGroups": []}]
+        items:
+          $ref: '#/definitions/data.ExperimentStepUpdate'
+        type: array
     required:
     - experimentId
+    type: object
+  data.MaterialAdd:
+    properties:
+      materialName:
+        description: |-
+          MaterialName string 材料名称
+          必填，材料的名称，最长 255 字符
+          示例值: "材料名称"
+        example: 材料名称
+        maxLength: 255
+        minLength: 1
+        type: string
+      percentage:
+        description: |-
+          Percentage float64 材料占比
+          必填，材料在材料组中的占比，范围 0-100
+          示例值: 60.00
+        example: 60
+        maximum: 100
+        minimum: 0
+        type: number
+    required:
+    - materialName
+    - percentage
     type: object
   data.MaterialData:
     properties:
@@ -222,6 +479,38 @@ definitions:
           材料在材料组中的占比，百分比形式
         example: 60
         type: number
+    type: object
+  data.MaterialGroupAdd:
+    properties:
+      materialGroupName:
+        description: |-
+          MaterialGroupName string 材料组名称
+          必填，材料组的名称，最长 255 字符
+          示例值: "材料组名称"
+        example: 材料组名称
+        maxLength: 255
+        minLength: 1
+        type: string
+      materials:
+        description: |-
+          Materials []MaterialAdd 材料列表
+          选填，材料组内的具体材料信息, percentage的和为100(占比100%)
+          示例值: [{"materialName": "材料名称", "percentage": 60.00}]
+        items:
+          $ref: '#/definitions/data.MaterialAdd'
+        type: array
+      proportion:
+        description: |-
+          Proportion float64 材料组占比
+          必填，材料组在实验步骤中的占比，范围 0-100
+          示例值: 25.50
+        example: 25.5
+        maximum: 100
+        minimum: 0
+        type: number
+    required:
+    - materialGroupName
+    - proportion
     type: object
   data.MaterialGroupData:
     properties:
@@ -250,6 +539,62 @@ definitions:
           材料组在实验步骤中的占比，百分比形式
         example: 25.5
         type: number
+    type: object
+  data.MaterialGroupUpdate:
+    properties:
+      materialGroupName:
+        description: |-
+          MaterialGroupName string 材料组名称
+          必填，材料组的名称，最长 255 字符
+          示例值: "材料组名称"
+        example: 材料组名称
+        maxLength: 255
+        minLength: 1
+        type: string
+      materials:
+        description: |-
+          Materials []MaterialUpdate 材料列表
+          选填，材料组内的具体材料信息, percentage的和为100(占比100%)
+          示例值: [{"materialName": "材料名称", "percentage": 60.00}]
+        items:
+          $ref: '#/definitions/data.MaterialUpdate'
+        type: array
+      proportion:
+        description: |-
+          Proportion float64 材料组占比
+          必填，材料组在实验步骤中的占比，范围 0-100
+          示例值: 25.50
+        example: 25.5
+        maximum: 100
+        minimum: 0
+        type: number
+    required:
+    - materialGroupName
+    - proportion
+    type: object
+  data.MaterialUpdate:
+    properties:
+      materialName:
+        description: |-
+          MaterialName string 材料名称
+          必填，材料的名称，最长 255 字符
+          示例值: "材料名称"
+        example: 材料名称
+        maxLength: 255
+        minLength: 1
+        type: string
+      percentage:
+        description: |-
+          Percentage float64 材料占比
+          必填，材料在材料组中的占比，范围 0-100
+          示例值: 60.00
+        example: 60
+        maximum: 100
+        minimum: 0
+        type: number
+    required:
+    - materialName
+    - percentage
     type: object
   data.PredictionData:
     properties:
@@ -417,7 +762,7 @@ paths:
       summary: 修改用户密码
       tags:
       - 用户认证
-  /data/sample:
+  /data/experiment:
     delete:
       consumes:
       - application/json
@@ -476,6 +821,35 @@ paths:
       summary: 获取实验列表
       tags:
       - 实验管理
+    post:
+      consumes:
+      - application/json
+      description: 根据提供的实验信息创建新的实验记录
+      parameters:
+      - description: 请求参数，包含新的实验信息
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/data.ExperimentAddRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功添加实验信息
+          schema:
+            $ref: '#/definitions/dto.Empty'
+        "400":
+          description: 请求参数错误，如缺少必要字段或格式不正确
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 服务器内部错误，可能是数据库插入失败等情况
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 添加新的实验信息
+      tags:
+      - 实验管理
     put:
       consumes:
       - application/json
@@ -505,7 +879,7 @@ paths:
       summary: 修改实验信息
       tags:
       - 实验管理
-  /data/sample/import:
+  /data/experiment/import:
     post:
       consumes:
       - multipart/form-data
@@ -534,6 +908,66 @@ paths:
       summary: 导入文件
       tags:
       - 实验管理
+  /data/inference/prediction:
+    post:
+      consumes:
+      - application/json
+      description: 通过提供的配方信息，预测实验结果
+      parameters:
+      - description: 配方推荐请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/data.PredictionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 推荐成功，返回推荐的材料列表
+          schema:
+            $ref: '#/definitions/data.PredictionResponse'
+        "400":
+          description: 请求参数错误，可能是配方信息不完整或格式不正确
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 服务器内部错误，可能是预测服务异常
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 根据配方预测实验结果
+      tags:
+      - 模型预测
+  /data/inference/prediction/demo:
+    post:
+      consumes:
+      - application/json
+      description: 演示版本的配方推荐功能，提供简单的预测功能
+      parameters:
+      - description: 配方推荐演示请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/data.PredictionDemoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 演示推荐成功，返回推荐的材料示例
+          schema:
+            $ref: '#/definitions/data.PredictionDemoResponse'
+        "400":
+          description: 请求参数错误，可能是配方信息不完整或格式不正确
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 服务器内部错误，可能是演示服务异常
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 根据配方预测实验结果（Demo）
+      tags:
+      - 模型预测
   /login:
     post:
       consumes:
@@ -564,64 +998,4 @@ paths:
       summary: 用户登录
       tags:
       - 用户认证
-  /v1/inference/prediction:
-    post:
-      consumes:
-      - application/json
-      description: 通过提供的配方信息，预测并推荐适合的材料
-      parameters:
-      - description: 配方推荐请求参数
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/data.PredictionRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 推荐成功，返回推荐的材料列表
-          schema:
-            $ref: '#/definitions/data.PredictionResponse'
-        "400":
-          description: 请求参数错误，可能是配方信息不完整或格式不正确
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "500":
-          description: 服务器内部错误，可能是预测服务异常
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: 根据配方推荐材料
-      tags:
-      - 模型预测
-  /v1/inference/prediction/demo:
-    post:
-      consumes:
-      - application/json
-      description: 演示版本的配方推荐功能，提供简单的预测功能
-      parameters:
-      - description: 配方推荐演示请求参数
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/data.PredictionDemoRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 演示推荐成功，返回推荐的材料示例
-          schema:
-            $ref: '#/definitions/data.PredictionDemoResponse'
-        "400":
-          description: 请求参数错误，可能是配方信息不完整或格式不正确
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "500":
-          description: 服务器内部错误，可能是演示服务异常
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: 根据配方推荐材料（Demo）
-      tags:
-      - 模型预测
 swagger: "2.0"

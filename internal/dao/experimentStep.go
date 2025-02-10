@@ -70,6 +70,13 @@ func (esd *ExperimentStepDao) DeleteByExperimentID(ctx context.Context, experime
 		Delete(&entity.ExperimentSteps{}).Error
 }
 
+// DeleteByExperimentIDTx 删除某实验的所有步骤(事务)
+func (esd *ExperimentStepDao) DeleteByExperimentIDTx(ctx context.Context, tx *gorm.DB, experimentID string) error {
+	return tx.WithContext(ctx).
+		Where(entity.ExperimentStepsColumns.ExperimentID+" = ?", experimentID).
+		Delete(&entity.ExperimentSteps{}).Error
+}
+
 // UpdateResultValue 更新步骤的结果值
 func (esd *ExperimentStepDao) UpdateResultValue(ctx context.Context, id string, resultValue string) error {
 	return db.Client.WithContext(ctx).

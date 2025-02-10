@@ -26,7 +26,7 @@ func NewInferenceApi() *InferenceApi {
 // @Success 200 {object} data.PredictionResponse "推荐成功，返回推荐的材料列表"
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，可能是配方信息不完整或格式不正确"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能是预测服务异常"
-// @Router /v1/inference/prediction [post]
+// @Router /data/inference/prediction [post]
 func (api InferenceApi) Prediction(ctx *gin.Context, req *data.PredictionRequest) (res *data.PredictionResponse,
 	err error) {
 	res, err = api.service.Prediction(ctx, req)
@@ -43,7 +43,7 @@ func (api InferenceApi) Prediction(ctx *gin.Context, req *data.PredictionRequest
 // @Success 200 {object} data.PredictionDemoResponse "演示推荐成功，返回推荐的材料示例"
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，可能是配方信息不完整或格式不正确"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能是演示服务异常"
-// @Router /v1/inference/prediction/demo [post]
+// @Router /data/inference/prediction/demo [post]
 func (api InferenceApi) PredictionDemo(ctx *gin.Context, req *data.PredictionDemoRequest) (res *data.
 	PredictionDemoResponse,
 	err error) {

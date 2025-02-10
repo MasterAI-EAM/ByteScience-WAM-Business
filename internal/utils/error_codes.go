@@ -48,6 +48,12 @@ const (
 
 	// 接口处理
 	FileParsingFailedCode = 3001 // 文件解析失败
+
+	// 业务错误
+
+	MaterialProportionSumNot100Code   = 4001 // 材料组占比总和不是100%
+	MaterialGroupProportionNot100Code = 4002 // 实验步骤中材料组的占比不是100%
+	ExperimentDoesNotExistCode        = 4003 // 实验不存在
 )
 
 // ErrorMessages 错误信息映射
@@ -98,4 +104,9 @@ var ErrorMessages = map[int]string{
 
 	// 接口处理
 	FileParsingFailedCode: "File parsing failed",
+
+	// 业务错误
+	MaterialProportionSumNot100Code:   "The sum of the material proportions in the material group is not 100%",
+	MaterialGroupProportionNot100Code: "The proportion of material groups in the experimental steps is not 100%",
+	ExperimentDoesNotExistCode:        "Experiment does not exist",
 }

@@ -1,6 +1,9 @@
 package utils
 
-import "regexp"
+import (
+	"regexp"
+	"time"
+)
 
 // IdentifyType 用于判断标识符类型（用户名、邮箱或手机号）
 func IdentifyType(identifier string) string {
@@ -42,4 +45,11 @@ func RemoveDuplicates[T comparable](arr []T) []T {
 		}
 	}
 	return result
+}
+
+func FormatTime(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	return t.Format("2006-01-02T15:04:05Z")
 }

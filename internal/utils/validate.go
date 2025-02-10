@@ -11,7 +11,7 @@ func bindAndValidate[T any](ctx *gin.Context, method string) (*T, error) {
 	var req T
 	var err error
 
-	if ctx.Request.URL.Path == "/v1/data/sample/import" { // 特殊接口不用json
+	if ctx.Request.URL.Path == "/v1/data/experiment/import" { // 特殊接口不用json
 		err = ctx.ShouldBind(&req)
 	} else {
 		err = ctx.ShouldBindJSON(&req)
