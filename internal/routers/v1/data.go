@@ -22,6 +22,12 @@ func InitDataRouter(routerGroup *gin.RouterGroup) {
 		utils.RegisterRoute(dataGroup, http.MethodDelete, "/experiment", experimentApi.Delete)
 		utils.RegisterRoute(dataGroup, http.MethodPost, "/experiment/import", experimentApi.Import)
 
+		recipeApi := data.NewRecipeApi()
+		utils.RegisterRoute(dataGroup, http.MethodPost, "/recipe", recipeApi.Add)
+		utils.RegisterRoute(dataGroup, http.MethodGet, "/recipe", recipeApi.List)
+		utils.RegisterRoute(dataGroup, http.MethodGet, "/recipe/info", recipeApi.Info)
+		utils.RegisterRoute(dataGroup, http.MethodGet, "/recipe/form/list", recipeApi.FormList)
+
 		inferenceApi := data.NewInferenceApi()
 		utils.RegisterRoute(dataGroup, http.MethodPost, "/inference/prediction", inferenceApi.Prediction)
 	}

@@ -14,15 +14,16 @@ CREATE TABLE `materials` (
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   PRIMARY KEY (`id`),
-  KEY `experiment_material_group_id` (`experiment_material_group_id`)
+  KEY `experiment_material_group_id` (`experiment_material_group_id`),
+  KEY `idx_materials_group_name_material_name` (`material_group_name`,`material_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='材料表'
 ******sql******/
 // Materials 材料表
 type Materials struct {
 	ID                        string    `gorm:"primaryKey;column:id;type:varchar(36);not null" json:"id"`                                                                          // 材料id
-	MaterialName              string    `gorm:"column:material_name;type:varchar(255);not null" json:"materialName"`                                                               // 材料名称
+	MaterialName              string    `gorm:"index:idx_materials_group_name_material_name;column:material_name;type:varchar(255);not null" json:"materialName"`                  // 材料名称
 	ExperimentMaterialGroupID string    `gorm:"index:experiment_material_group_id;column:experiment_material_group_id;type:varchar(36);not null" json:"experimentMaterialGroupId"` // 实验材料组id
-	MaterialGroupName         string    `gorm:"column:material_group_name;type:varchar(255);not null" json:"materialGroupName"`                                                    // 材料组名称
+	MaterialGroupName         string    `gorm:"index:idx_materials_group_name_material_name;column:material_group_name;type:varchar(255);not null" json:"materialGroupName"`       // 材料组名称
 	Percentage                float64   `gorm:"column:percentage;type:decimal(10,2);not null" json:"percentage"`                                                                   // 材料在组内的占比（%）
 	CreatedAt                 time.Time `gorm:"column:created_at;type:datetime;not null;default:CURRENT_TIMESTAMP" json:"createdAt"`                                               // 创建时间
 	UpdatedAt                 time.Time `gorm:"column:updated_at;type:datetime;not null;default:CURRENT_TIMESTAMP" json:"updatedAt"`                                               // 修改时间

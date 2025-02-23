@@ -8,6 +8,7 @@ import (
 CREATE TABLE `experiment_steps` (
   `id` varchar(36) NOT NULL COMMENT '实验步骤id',
   `experiment_id` varchar(36) NOT NULL COMMENT '实验ID',
+  `recipe_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '配方id',
   `step_order` int NOT NULL COMMENT '步骤顺序',
   `step_name` varchar(255) NOT NULL COMMENT '步骤名称',
   `result_value` varchar(256) DEFAULT NULL COMMENT '步骤结果值',
@@ -22,6 +23,7 @@ CREATE TABLE `experiment_steps` (
 type ExperimentSteps struct {
 	ID                  string    `gorm:"primaryKey;column:id;type:varchar(36);not null" json:"id"`                               // 实验步骤id
 	ExperimentID        string    `gorm:"index:experiment_id;column:experiment_id;type:varchar(36);not null" json:"experimentId"` // 实验ID
+	RecipeID            string    `gorm:"column:recipe_id;type:varchar(36);not null" json:"recipeId"`                             // 配方id
 	StepOrder           int       `gorm:"column:step_order;type:int;not null" json:"stepOrder"`                                   // 步骤顺序
 	StepName            string    `gorm:"column:step_name;type:varchar(255);not null" json:"stepName"`                            // 步骤名称
 	ResultValue         string    `gorm:"column:result_value;type:varchar(256);default:null" json:"resultValue"`                  // 步骤结果值
@@ -39,6 +41,7 @@ func (m *ExperimentSteps) TableName() string {
 var ExperimentStepsColumns = struct {
 	ID                  string
 	ExperimentID        string
+	RecipeID            string
 	StepOrder           string
 	StepName            string
 	ResultValue         string
@@ -48,6 +51,7 @@ var ExperimentStepsColumns = struct {
 }{
 	ID:                  "id",
 	ExperimentID:        "experiment_id",
+	RecipeID:            "recipe_id",
 	StepOrder:           "step_order",
 	StepName:            "step_name",
 	ResultValue:         "result_value",

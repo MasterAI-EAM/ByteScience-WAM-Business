@@ -10,12 +10,15 @@ import (
 	"ByteScience-WAM-Business/pkg/db"
 	"ByteScience-WAM-Business/pkg/logger"
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/xuri/excelize/v2"
 	"gorm.io/gorm"
 	"mime/multipart"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -25,6 +28,7 @@ type ExperimentService struct {
 	experimentDao     *dao.ExperimentDao
 	experimentStepDao *dao.ExperimentStepDao
 	materialDao       *dao.MaterialDao
+	recipeDao         *dao.RecipeDao
 }
 
 // NewExperimentService 创建一个新的 ExperimentService 实例
@@ -33,6 +37,7 @@ func NewExperimentService() *ExperimentService {
 		experimentDao:     dao.NewExperimentDao(),
 		experimentStepDao: dao.NewExperimentStepDao(),
 		materialDao:       dao.NewMaterialDao(),
+		recipeDao:         dao.NewRecipeDao(),
 	}
 }
 
@@ -44,8 +49,8 @@ func (ss *ExperimentService) List(ctx context.Context, req *data.ExperimentListR
 		entity.ExperimentColumns.Experimenter:   req.Experimenter,
 	})
 	if err != nil {
-		logger.Logger.Errorf("[List] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.InternalError)
+		logger.Logger.Errorf("[ExperimentService List] Mysql err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
 	}
 
 	// 获取所有实验ID
@@ -60,7 +65,7 @@ func (ss *ExperimentService) List(ctx context.Context, req *data.ExperimentListR
 	fileMap := make(map[string]string, 0)
 	fileIDs = utils.RemoveDuplicates(fileIDs)
 	if err = db.Client.WithContext(ctx).Where("id IN (?)", fileIDs).Find(&files).Error; err != nil {
-		logger.Logger.Errorf("[List] Mysql err: %v", err)
+		logger.Logger.Errorf("[ExperimentService List] Mysql err: %v", err)
 		return nil, utils.NewBusinessError(utils.InternalError)
 	}
 	for _, file := range files {
@@ -69,11 +74,11 @@ func (ss *ExperimentService) List(ctx context.Context, req *data.ExperimentListR
 
 	// 一次性查询所有实验步骤
 	var steps []entity.ExperimentSteps
-	if err := db.Client.WithContext(ctx).Where("experiment_id IN (?)", experimentIDs).
+	if err = db.Client.WithContext(ctx).Where("experiment_id IN (?)", experimentIDs).
 		Order("step_order DESC").
 		Find(&steps).Error; err != nil {
-		logger.Logger.Errorf("[List] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.InternalError)
+		logger.Logger.Errorf("[ExperimentService List] Mysql err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
 	}
 
 	// 获取所有步骤ID
@@ -82,33 +87,8 @@ func (ss *ExperimentService) List(ctx context.Context, req *data.ExperimentListR
 		stepIDs[i] = step.ID
 	}
 
-	// 一次性查询所有材料组
-	var materialGroups []entity.ExperimentStepMaterial
-	if err := db.Client.WithContext(ctx).
-		Where("experiment_step_id IN (?)", stepIDs).
-		Find(&materialGroups).Error; err != nil {
-		logger.Logger.Errorf("[List] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.InternalError)
-	}
-
-	// 获取所有材料ID
-	materialGroupIDs := make([]string, len(materialGroups))
-	for i, group := range materialGroups {
-		materialGroupIDs[i] = group.ExperimentMaterialGroupID
-	}
-
-	// 一次性查询所有材料
-	var materials []entity.Materials
-	if err := db.Client.WithContext(ctx).
-		Where("experiment_material_group_id IN (?)", materialGroupIDs).
-		Find(&materials).Error; err != nil {
-		logger.Logger.Errorf("[List] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.InternalError)
-	}
-
 	// 构建查询结果映射
 	stepMap := make(map[string][]data.ExperimentStepData)
-	materialGroupMap := make(map[string][]data.MaterialGroupData)
 
 	// 填充 stepMap
 	for _, step := range steps {
@@ -119,30 +99,7 @@ func (ss *ExperimentService) List(ctx context.Context, req *data.ExperimentListR
 			ExperimentCondition: step.ExperimentCondition,
 			ResultValue:         step.ResultValue,
 			StepOrder:           step.StepOrder,
-		})
-	}
-
-	// 填充 materialGroupMap
-	groupMap := make(map[string]string)
-	for _, material := range materials {
-		groupMap[material.ExperimentMaterialGroupID] = material.MaterialGroupName
-	}
-
-	for _, group := range materialGroups {
-		materialGroupMap[group.ExperimentStepID] = append(materialGroupMap[group.ExperimentStepID], data.MaterialGroupData{
-			MaterialGroupID:   group.ExperimentMaterialGroupID,
-			MaterialGroupName: groupMap[group.ExperimentMaterialGroupID],
-			Proportion:        group.Proportion,
-		})
-	}
-
-	// 填充每个材料组的材料信息
-	materialMap := make(map[string][]data.MaterialData)
-	for _, material := range materials {
-		materialMap[material.ExperimentMaterialGroupID] = append(materialMap[material.ExperimentMaterialGroupID], data.MaterialData{
-			MaterialID:   material.ID,
-			MaterialName: material.MaterialName,
-			Percentage:   material.Percentage,
+			RecipeID:            step.RecipeID,
 		})
 	}
 
@@ -150,21 +107,6 @@ func (ss *ExperimentService) List(ctx context.Context, req *data.ExperimentListR
 	var experimentDataList []data.ExperimentData
 	for _, experiment := range experiments {
 		stepsData := stepMap[experiment.ID]
-
-		// 填充每个实验步骤的材料组和材料
-		for i := range stepsData {
-			stepData := &stepsData[i]
-			materialGroups := materialGroupMap[stepData.StepID]
-
-			// 填充每个材料组的材料信息
-			for j := range materialGroups {
-				materialGroupData := &materialGroups[j]
-				materialGroupData.Materials = materialMap[materialGroupData.MaterialGroupID]
-			}
-
-			stepData.MaterialGroups = materialGroups
-		}
-
 		experimentDataList = append(experimentDataList, data.ExperimentData{
 			ExperimentID:   experiment.ID,
 			ExperimentName: experiment.ExperimentName,
@@ -191,8 +133,8 @@ func (ss *ExperimentService) List(ctx context.Context, req *data.ExperimentListR
 func (ss *ExperimentService) Delete(ctx context.Context, req *data.ExperimentDeleteRequest) (*dto.Empty, error) {
 	experiment, err := ss.experimentDao.GetByID(ctx, req.ExperimentID)
 	if err != nil {
-		logger.Logger.Errorf("[Delete] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.InternalError)
+		logger.Logger.Errorf("[ExperimentService Delete] Mysql err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
 	}
 
 	if experiment == nil || experiment.ID == "" {
@@ -206,28 +148,20 @@ func (ss *ExperimentService) Delete(ctx context.Context, req *data.ExperimentDel
 			return err
 		}
 
-		// 删除实验关联数据
-		if err = tx.WithContext(ctx).
-			Where(entity.ExperimentStepMaterialColumns.ExperimentStepID+" in ?", experimentStepIdList).
-			Delete(&entity.ExperimentStepMaterial{}).Error; err != nil {
-			logger.Logger.Errorf("[Edit] delete ExperimentStepMaterial err: %v", err)
-			return err
-		}
-
 		if err := ss.experimentStepDao.DeleteByExperimentIDTx(ctx, tx, req.ExperimentID); err != nil {
-			logger.Logger.Errorf("[Delete] Delete experimentStep err: %v", err)
+			logger.Logger.Errorf("[ExperimentService Delete] Delete experimentStep err: %v", err)
 			return err
 		}
 
 		if err := ss.experimentDao.DeleteByIDTx(ctx, tx, req.ExperimentID); err != nil {
-			logger.Logger.Errorf("[Delete] Delete experiment err: %v", err)
+			logger.Logger.Errorf("[ExperimentService Delete] Delete experiment err: %v", err)
 			return err
 		}
 
 		return nil
 	}); err != nil {
-		logger.Logger.Errorf("[Delete] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.InternalError)
+		logger.Logger.Errorf("[ExperimentService Delete] Mysql err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
 	}
 
 	return nil, err
@@ -235,30 +169,81 @@ func (ss *ExperimentService) Delete(ctx context.Context, req *data.ExperimentDel
 
 // Add 添加实验数据
 func (ss *ExperimentService) Add(ctx context.Context, userId string, req *data.ExperimentAddRequest) (*dto.Empty, error) {
-	materials, experiment, experimentSteps, experimentStepMaterials := getInsertData(userId, req)
+	experiment := entity.Experiment{
+		ID:             uuid.NewString(),
+		FileID:         "",
+		ExperimentName: req.ExperimentName,
+		EntryCategory:  2,
+		Sort:           req.Sort,
+		Experimenter:   req.Experimenter,
+		UserID:         userId,
+		StartTime:      nil,
+		EndTime:        nil,
+	}
+	layout := "2006-01-02T15:04:05Z"
+	if req.StartTime != "" {
+		startTime, _ := time.Parse(layout, req.StartTime)
+		experiment.StartTime = &startTime
+	}
+	if req.EndTime != "" {
+		endTime, _ := time.Parse(layout, req.EndTime)
+		experiment.EndTime = &endTime
+	}
+
+	experimentSteps := make([]entity.ExperimentSteps, 0)
+	recipeIdList := make([]string, 0)
+	for _, step := range req.Steps {
+		if !utils.Contains(recipeIdList, step.RecipeID) {
+			recipeIdList = append(recipeIdList, step.RecipeID)
+		}
+		experimentStep := entity.ExperimentSteps{
+			ID:                  uuid.NewString(),
+			ExperimentID:        experiment.ID,
+			RecipeID:            step.RecipeID,
+			StepOrder:           step.StepOrder,
+			StepName:            step.StepName,
+			ResultValue:         step.ResultValue,
+			ExperimentCondition: step.ExperimentCondition,
+		}
+		experimentSteps = append(experimentSteps, experimentStep)
+	}
+
+	// 获取配方数据
+	recipeMaterialGroups, materials, err := ss.recipeDao.GetMaterialByIdList(ctx, recipeIdList)
+	if err != nil {
+		return nil, err
+	}
+
+	// 生成试验签名
+	experimentSignatureMap, _ := generateExperimentSignature([]entity.Experiment{experiment},
+		experimentSteps, recipeMaterialGroups, materials)
+	experiment.ExperimentSignature = experimentSignatureMap[experiment.ID]
+
+	experimentList, err := ss.experimentDao.GetByExperimentSignature(ctx, experiment.ExperimentSignature)
+	if err != nil {
+		logger.Logger.Errorf("[ExperimentService Add] Mysql err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+	}
+
+	if len(experimentList) > 0 {
+		return nil, utils.NewBusinessError(utils.DuplicateExperimentFormatCode, experimentList[0].ExperimentName)
+	}
+
 	// 使用事务闭包
 	if err := db.Client.Transaction(func(tx *gorm.DB) error {
 		maxNum := 500
-		if err := tx.Create(experiment).Error; err != nil {
-			logger.Logger.Errorf("[Add] CreateInBatches experiment err: %v", err)
+		if err := tx.Create(&experiment).Error; err != nil {
+			logger.Logger.Errorf("[ExperimentService Add] CreateInBatches experiment err: %v", err)
 			return err
 		}
 		if err := tx.CreateInBatches(experimentSteps, maxNum).Error; err != nil {
-			logger.Logger.Errorf("[Add] CreateInBatches experimentSteps err: %v", err)
-			return err
-		}
-		if err := tx.CreateInBatches(experimentStepMaterials, maxNum).Error; err != nil {
-			logger.Logger.Errorf("[Add] CreateInBatches experimentStepMaterials err: %v", err)
-			return err
-		}
-		if err := tx.CreateInBatches(materials, maxNum).Error; err != nil {
-			logger.Logger.Errorf("[Add] CreateInBatches materials err: %v", err)
+			logger.Logger.Errorf("[ExperimentService Add] CreateInBatches experimentSteps err: %v", err)
 			return err
 		}
 		return nil
 	}); err != nil {
-		logger.Logger.Errorf("[Add] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.InternalError)
+		logger.Logger.Errorf("[ExperimentService Add] Mysql err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
 	}
 
 	return nil, nil
@@ -268,22 +253,66 @@ func (ss *ExperimentService) Add(ctx context.Context, userId string, req *data.E
 func (ss *ExperimentService) Edit(ctx context.Context, req *data.ExperimentUpdateRequest) (*dto.Empty, error) {
 	experiment, err := ss.experimentDao.GetByID(ctx, req.ExperimentID)
 	if err != nil {
-		logger.Logger.Errorf("[Edit] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.InternalError)
+		logger.Logger.Errorf("[ExperimentService Edit] Mysql err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
 	}
 
 	if experiment == nil || experiment.ID == "" {
 		return nil, utils.NewBusinessError(utils.ExperimentDoesNotExistCode)
 	}
 
-	materials, experimentSteps, experimentStepMaterials := getUpdateData(experiment.CreatedAt, req)
+	experimentSteps := make([]entity.ExperimentSteps, 0)
+	recipeIdList := make([]string, 0)
+	for _, step := range req.Steps {
+		if !utils.Contains(recipeIdList, step.RecipeID) {
+			recipeIdList = append(recipeIdList, step.RecipeID)
+		}
+		experimentStep := entity.ExperimentSteps{
+			ID:                  uuid.NewString(),
+			ExperimentID:        experiment.ID,
+			RecipeID:            step.RecipeID,
+			StepOrder:           step.StepOrder,
+			StepName:            step.StepName,
+			ResultValue:         step.ResultValue,
+			ExperimentCondition: step.ExperimentCondition,
+		}
+		experimentSteps = append(experimentSteps, experimentStep)
+	}
+
+	// 获取配方数据
+	recipeMaterialGroups, materials, err := ss.recipeDao.GetMaterialByIdList(ctx, recipeIdList)
+	if err != nil {
+		return nil, err
+	}
+
+	// 生成试验签名
+	experimentSignatureMap, _ := generateExperimentSignature([]entity.Experiment{*experiment},
+		experimentSteps, recipeMaterialGroups, materials)
+	experiment.ExperimentSignature = experimentSignatureMap[experiment.ID]
+
+	experimentList, err := ss.experimentDao.GetByExperimentSignature(ctx, experiment.ExperimentSignature)
+	if err != nil {
+		logger.Logger.Errorf("[ExperimentService Add] Mysql err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+	}
+
+	// 标记是否为自身重复（允许修改的情况）
+	isSelfDuplicate := len(experimentList) == 1 && experimentList[0].ID == req.ExperimentID
+
+	// 检查查询到的实验列表情况
+	if len(experimentList) > 0 && !isSelfDuplicate {
+		// 存在重复实验（非自身重复），返回业务错误
+		return nil, utils.NewBusinessError(utils.DuplicateExperimentFormatCode, experimentList[0].ExperimentName)
+	}
+
 	if err = db.Client.Transaction(func(tx *gorm.DB) error {
 		// 修改实验
 		update := map[string]interface{}{
-			entity.ExperimentColumns.ExperimentName: req.ExperimentName,
-			entity.ExperimentColumns.Experimenter:   req.Experimenter,
-			entity.ExperimentColumns.StartTime:      nil,
-			entity.ExperimentColumns.EndTime:        nil,
+			entity.ExperimentColumns.ExperimentName:      req.ExperimentName,
+			entity.ExperimentColumns.Experimenter:        req.Experimenter,
+			entity.ExperimentColumns.ExperimentSignature: experimentSignatureMap[experiment.ID],
+			entity.ExperimentColumns.StartTime:           nil,
+			entity.ExperimentColumns.EndTime:             nil,
 		}
 		if req.StartTime != "" {
 			update[entity.ExperimentColumns.StartTime] = req.StartTime
@@ -292,49 +321,24 @@ func (ss *ExperimentService) Edit(ctx context.Context, req *data.ExperimentUpdat
 			update[entity.ExperimentColumns.EndTime] = req.EndTime
 		}
 		if err = ss.experimentDao.Update(ctx, req.ExperimentID, update); err != nil {
-			logger.Logger.Errorf("[Edit] Update experiment err: %v", err)
-			return err
-		}
-
-		experimentStepIdList := make([]string, 0)
-		if err = tx.WithContext(ctx).Model(&entity.ExperimentSteps{}).Where(entity.ExperimentStepsColumns.ExperimentID+" = ?",
-			req.ExperimentID).
-			Pluck(entity.ExperimentStepsColumns.ID, &experimentStepIdList).Error; err != nil {
-			return err
-		}
-
-		// 删除实验关联数据
-		if err = tx.WithContext(ctx).
-			Where(entity.ExperimentStepMaterialColumns.ExperimentStepID+" in ?", experimentStepIdList).
-			Delete(&entity.ExperimentStepMaterial{}).Error; err != nil {
-			logger.Logger.Errorf("[Edit] delete ExperimentStepMaterial err: %v", err)
+			logger.Logger.Errorf("[ExperimentService Edit] Update experiment err: %v", err)
 			return err
 		}
 
 		if err = ss.experimentStepDao.DeleteByExperimentIDTx(ctx, tx, req.ExperimentID); err != nil {
-			logger.Logger.Errorf("[Edit] Delete experimentStep err: %v", err)
+			logger.Logger.Errorf("[ExperimentService Edit] Delete experimentStep err: %v", err)
 			return err
 		}
 
-		// 插入新的实验关联数据
-		maxNum := 500
-		if err = tx.CreateInBatches(experimentSteps, maxNum).Error; err != nil {
-			logger.Logger.Errorf("[Edit] CreateInBatches experimentSteps err: %v", err)
-			return err
-		}
-		if err = tx.CreateInBatches(experimentStepMaterials, maxNum).Error; err != nil {
-			logger.Logger.Errorf("[Edit] CreateInBatches experimentStepMaterials err: %v", err)
-			return err
-		}
-		if err = tx.CreateInBatches(materials, maxNum).Error; err != nil {
-			logger.Logger.Errorf("[Edit] CreateInBatches materials err: %v", err)
+		if err = tx.CreateInBatches(&experimentSteps, 500).Error; err != nil {
+			logger.Logger.Errorf("[ExperimentService Edit] CreateInBatches experimentSteps err: %v", err)
 			return err
 		}
 
 		return nil
 	}); err != nil {
-		logger.Logger.Errorf("[Edit] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.InternalError)
+		logger.Logger.Errorf("[ExperimentService Edit] Mysql err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
 	}
 
 	return nil, nil
@@ -359,131 +363,55 @@ func (ss ExperimentService) Import(ctx context.Context, userId string, file *mul
 	uuidMap, experimentGroupIdList := initUUIDMaps(data)
 
 	// 将excel数据转成mysql数据
-	materials, experiments, experimentSteps, experimentStepMaterial, err := getData(experimentFile.ID, userId, data,
-		uuidMap, experimentGroupIdList)
-
-	// 将数据入库
-	if err = WriteData(experimentFile, materials, experiments, experimentSteps, experimentStepMaterial); err != nil {
+	experiments, experimentSteps, recipes, recipeMaterialGroups, materials, err := getData(experimentFile.ID,
+		userId, data, uuidMap, experimentGroupIdList)
+	if err != nil {
 		return nil, err
 	}
 
+	// 批量生成实验密钥
+	experimentSignatureMap, experimentSignatureList := generateExperimentSignature(experiments, experimentSteps,
+		recipeMaterialGroups,
+		materials)
+	for k, _ := range experiments {
+		experiments[k].ExperimentSignature = experimentSignatureMap[experiments[k].ID]
+	}
+
+	// 获取已存在数据库的实验密钥
+	experimentInSignatureList, err := ss.experimentDao.GetExperimentInSignatureList(ctx, experimentSignatureList)
+	if err != nil {
+		logger.Logger.Errorf("[ExperimentService Import] GetExperimentInSignatureList err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+	}
+
+	// 批量生成配方密钥
+	recipeSignatureMap, recipeSignatureList := GenerateBatchRecipeSignature(recipeMaterialGroups, materials)
+	for k, _ := range recipes {
+		recipes[k].RecipeSignature = recipeSignatureMap[recipes[k].ID]
+	}
+
+	// 获取已存在数据库的配方密钥
+	recipeInSignatureMap, err := ss.recipeDao.GetRecipeInSignatureMap(ctx, recipeSignatureList)
+	if err != nil {
+		logger.Logger.Errorf("[ExperimentService Import] GetExperimentInSignatureList err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+	}
+
+	// 去掉密钥重复的实验、配方数据
+	experiments, experimentSteps, recipes, recipeMaterialGroups, materials = filterData(experiments,
+		experimentSteps, recipes, recipeMaterialGroups, materials, experimentInSignatureList, recipeInSignatureMap)
+
+	// 每条数据都导入过（文件重复导入）
+	if len(experiments) == 0 {
+		return nil, utils.NewBusinessError(utils.DuplicateFileImportCode)
+	}
+
+	// 将数据入库
+	if err = WriteData(experimentFile, experiments, experimentSteps, recipes, recipeMaterialGroups, materials); err != nil {
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+	}
+
 	return nil, nil
-}
-
-// getInsertData 将插入数据内容转换成入库数据
-func getInsertData(userId string, data *data.ExperimentAddRequest) ([]entity.Materials, entity.Experiment, []entity.ExperimentSteps,
-	[]entity.ExperimentStepMaterial) {
-	var materials []entity.Materials
-	var experimentSteps []entity.ExperimentSteps
-	var experimentStepMaterials []entity.ExperimentStepMaterial
-	now := time.Now()
-	layout := "2006-01-02T15:04:05Z"
-	experiment := entity.Experiment{
-		ID:             uuid.NewString(),
-		FileID:         "",
-		ExperimentName: "",
-		EntryCategory:  2,
-		Sort:           data.Sort,
-		Experimenter:   data.Experimenter,
-		UserID:         userId,
-		StartTime:      nil,
-		EndTime:        nil,
-		CreatedAt:      now,
-	}
-	if data.StartTime != "" {
-		startTime, err := time.Parse(layout, data.StartTime)
-		if err != nil {
-			logger.Logger.Errorf("[getInsertData] time.Parse Error: %v", err)
-		} else {
-			experiment.StartTime = &startTime
-		}
-	}
-	if data.EndTime != "" {
-		endTime, err := time.Parse(layout, data.EndTime)
-		if err != nil {
-			logger.Logger.Errorf("[getInsertData] time.Parse Error: %v", err)
-		} else {
-			experiment.EndTime = &endTime
-		}
-	}
-	for _, step := range data.Steps {
-		experimentStep := entity.ExperimentSteps{
-			ID:                  uuid.NewString(),
-			ExperimentID:        experiment.ID,
-			StepOrder:           step.StepOrder,
-			StepName:            step.StepName,
-			ResultValue:         step.ResultValue,
-			ExperimentCondition: step.ExperimentCondition,
-			CreatedAt:           now,
-		}
-		experimentSteps = append(experimentSteps, experimentStep)
-
-		for _, materialGroup := range step.MaterialGroups {
-			ExperimentStepMaterial := entity.ExperimentStepMaterial{
-				ExperimentStepID:          experimentStep.ID,
-				ExperimentMaterialGroupID: uuid.NewString(),
-				Proportion:                materialGroup.Proportion,
-			}
-			experimentStepMaterials = append(experimentStepMaterials, ExperimentStepMaterial)
-			for _, material := range materialGroup.Materials {
-				materials = append(materials, entity.Materials{
-					ID:                        uuid.NewString(),
-					MaterialName:              material.MaterialName,
-					ExperimentMaterialGroupID: ExperimentStepMaterial.ExperimentMaterialGroupID,
-					MaterialGroupName:         materialGroup.MaterialGroupName,
-					Percentage:                material.Percentage,
-					CreatedAt:                 now,
-				})
-			}
-		}
-	}
-
-	materials, experimentStepMaterials = DeduplicateMaterials(materials, experimentStepMaterials)
-
-	return materials, experiment, experimentSteps, experimentStepMaterials
-}
-
-// getUpdateData 将修改的数据内容转换成入库数据
-func getUpdateData(createdAt time.Time, data *data.ExperimentUpdateRequest) ([]entity.Materials, []entity.ExperimentSteps,
-	[]entity.ExperimentStepMaterial) {
-	var materials []entity.Materials
-	var experimentSteps []entity.ExperimentSteps
-	var experimentStepMaterials []entity.ExperimentStepMaterial
-	for _, step := range data.Steps {
-		experimentStep := entity.ExperimentSteps{
-			ID:                  uuid.NewString(),
-			ExperimentID:        data.ExperimentID,
-			StepOrder:           step.StepOrder,
-			StepName:            step.StepName,
-			ResultValue:         step.ResultValue,
-			ExperimentCondition: step.ExperimentCondition,
-			CreatedAt:           createdAt,
-		}
-		experimentSteps = append(experimentSteps, experimentStep)
-
-		for _, materialGroup := range step.MaterialGroups {
-			ExperimentStepMaterial := entity.ExperimentStepMaterial{
-				ExperimentStepID:          experimentStep.ID,
-				ExperimentMaterialGroupID: uuid.NewString(),
-				Proportion:                materialGroup.Proportion,
-			}
-			experimentStepMaterials = append(experimentStepMaterials, ExperimentStepMaterial)
-			for _, material := range materialGroup.Materials {
-				materials = append(materials, entity.Materials{
-					ID:                        uuid.NewString(),
-					MaterialName:              material.MaterialName,
-					ExperimentMaterialGroupID: ExperimentStepMaterial.ExperimentMaterialGroupID,
-					MaterialGroupName:         materialGroup.MaterialGroupName,
-					Percentage:                material.Percentage,
-					CreatedAt:                 createdAt,
-				})
-			}
-		}
-	}
-
-	materials, experimentStepMaterials = DeduplicateMaterials(materials, experimentStepMaterials)
-
-	return materials, experimentSteps, experimentStepMaterials
 }
 
 // 初始化 UUID 映射表
@@ -528,82 +456,33 @@ func getXlsxContent(file *multipart.FileHeader) ([][]string, error) {
 	return data, nil
 }
 
-// DeduplicateMaterials 去重 materials 并更新 experimentStepMaterials
-func DeduplicateMaterials(materials []entity.Materials, experimentStepMaterials []entity.ExperimentStepMaterial) ([]entity.Materials, []entity.ExperimentStepMaterial) {
-	// 用于存储唯一的材料组，key 是材料组合签名，value 是 original_group
-	materialMap := make(map[string]string)
-	// 记录去重后的材料数据
-	var deduplicatedMaterials []entity.Materials
-	// 记录 group_id 映射关系
-	groupMapping := make(map[string]string)
-
-	// 遍历 materials，找出重复项
-	for _, material := range materials {
-		// 生成唯一的材料签名（确保 percentage 精度一致）
-		signature := fmt.Sprintf("%s:%s:%.2f", material.MaterialName, material.MaterialGroupName, material.Percentage)
-
-		// 检查是否已有该材料组合
-		if originalGroup, exists := materialMap[signature]; exists {
-			// 记录重复项的 group_id 替换关系
-			groupMapping[material.ExperimentMaterialGroupID] = originalGroup
-		} else {
-			// 该材料组合首次出现，存入 map 并加入去重后的列表
-			materialMap[signature] = material.ExperimentMaterialGroupID
-			deduplicatedMaterials = append(deduplicatedMaterials, material)
-		}
-	}
-
-	// 遍历 experimentStepMaterials，替换 group ID
-	for i, stepMaterial := range experimentStepMaterials {
-		if newGroupID, exists := groupMapping[stepMaterial.ExperimentMaterialGroupID]; exists {
-			experimentStepMaterials[i].ExperimentMaterialGroupID = newGroupID
-		}
-	}
-
-	logger.Logger.Infof("[Deduplication] Removed %d duplicate materials", len(materials)-len(deduplicatedMaterials))
-	return deduplicatedMaterials, experimentStepMaterials
-}
-
 // getData 将excel内容转换成入库数据
 func getData(fileId, userId string, data [][]string, uuidMap map[int]string,
-	experimentGroupIdList map[int][]string) ([]entity.
-	Materials,
-	[]entity.Experiment, []entity.ExperimentSteps,
-	[]entity.ExperimentStepMaterial, error) {
+	experimentGroupIdList map[int][]string) ([]entity.Experiment, []entity.ExperimentSteps, []entity.Recipes,
+	[]entity.RecipeMaterialGroups, []entity.Materials, error) {
 	var index, index2, index3, index4 int
 	var isIndexSet, isIndexSet2, isIndexSet3, isIndexSet4 bool // 添加一个布尔变量标志是否已设置 index
 	var isInGroup bool
 	var currentGroupId, groupName string
-	var materials []entity.Materials
 	var experiments []entity.Experiment
 	var experimentSteps []entity.ExperimentSteps
-	var experimentStepMaterials []entity.ExperimentStepMaterial
+	var recipes []entity.Recipes
+	var recipeMaterialGroups []entity.RecipeMaterialGroups
+	var materials []entity.Materials
 	var err error
-	now := time.Now()
-
-	var num int64
-	if err = db.Client.Model(&entity.Experiment{}).Count(&num).Error; err != nil {
-		return nil, nil, nil, nil, err
+	var experimentNum, recipeNum int64
+	if err = db.Client.Model(&entity.Experiment{}).Count(&experimentNum).Error; err != nil {
+		logger.Logger.Errorf("[getData] Mysql err: %v", err)
+		return nil, nil, nil, nil, nil, utils.NewBusinessError(utils.DatabaseErrorCode)
 	}
 
-	// 初始化实验数据
-	for k, id := range uuidMap {
-		experiment := entity.Experiment{
-			ID:             id,
-			FileID:         fileId,
-			ExperimentName: fmt.Sprintf("G%d", num+int64(k)),
-			EntryCategory:  1,
-			Experimenter:   "",
-			UserID:         userId,
-			Sort:           int(num) + k,
-			CreatedAt:      now,
-			UpdatedAt:      now,
-		}
-		experiments = append(experiments, experiment)
+	if err = db.Client.Model(&entity.Recipes{}).Count(&recipeNum).Error; err != nil {
+		logger.Logger.Errorf("[getData] Mysql err: %v", err)
+		return nil, nil, nil, nil, nil, utils.NewBusinessError(utils.DatabaseErrorCode)
 	}
 
+	experimentExistsMap := make(map[string]bool)
 	for rowIndex, row := range data {
-		// 检查是否存在 A 列数据
 		if len(row) > 0 {
 			if isGroupHeader(row[0]) {
 				isInGroup = true
@@ -623,14 +502,12 @@ func getData(fileId, userId string, data [][]string, uuidMap map[int]string,
 						MaterialName:              row[0],
 						ExperimentMaterialGroupID: currentGroupId,
 						MaterialGroupName:         groupName,
-						CreatedAt:                 now,
-						UpdatedAt:                 now,
 					}
 					if key > 0 && val != "" {
 						// 转换字符串为 float64
 						floatValue, err := strconv.ParseFloat(val, 64)
 						if err != nil {
-							return nil, nil, nil, nil, err
+							return nil, nil, nil, nil, nil, err
 						}
 						material.Percentage = floatValue
 						materials = append(materials, material)
@@ -672,21 +549,23 @@ func getData(fileId, userId string, data [][]string, uuidMap map[int]string,
 
 					experimentStep := entity.ExperimentSteps{
 						ID:           uuid.NewString(),
+						RecipeID:     uuid.NewString(),
 						ExperimentID: uuidMap[key],
 						StepName:     row[0],
-						StepOrder:    getOrder(row[0]),
+						StepOrder:    getStepOrder(row[0]),
 						ResultValue:  value,
-						CreatedAt:    now,
-						UpdatedAt:    now,
 					}
 
-					experimentStepMaterial1 := entity.ExperimentStepMaterial{
-						ExperimentStepID:          experimentStep.ID,
+					// 没有实验步骤的实验要忽略入库
+					experimentExistsMap[uuidMap[key]] = true
+
+					recipeMaterialGroups1 := entity.RecipeMaterialGroups{
+						RecipeID:                  experimentStep.RecipeID,
 						ExperimentMaterialGroupID: experimentGroupIdList[key][0],
 						Proportion:                100,
 					}
-					experimentStepMaterial2 := entity.ExperimentStepMaterial{
-						ExperimentStepID:          experimentStep.ID,
+					recipeMaterialGroups2 := entity.RecipeMaterialGroups{
+						RecipeID:                  experimentStep.RecipeID,
 						ExperimentMaterialGroupID: experimentGroupIdList[key][1],
 						Proportion:                100,
 					}
@@ -694,34 +573,44 @@ func getData(fileId, userId string, data [][]string, uuidMap map[int]string,
 					if isExperimentCondition(row[0], "E") {
 						experimentStep.ExperimentCondition = data[index][key]
 						p1, p2, _ := convertRatioToPercentage(data[index3][key])
-						experimentStepMaterial1.Proportion = p1
-						experimentStepMaterial2.Proportion = p2
+						recipeMaterialGroups1.Proportion = p1
+						recipeMaterialGroups2.Proportion = p2
 					}
 
 					if isExperimentCondition(row[0], "I") {
 						experimentStep.ExperimentCondition = data[index2][key]
 
 						p1, p2, _ := convertRatioToPercentage(data[index4][key])
-						experimentStepMaterial1.Proportion = p1
-						experimentStepMaterial2.Proportion = p2
+						recipeMaterialGroups1.Proportion = p1
+						recipeMaterialGroups2.Proportion = p2
 					}
 
 					if isExperimentCondition(row[0], "D") {
 						p1, p2, _ := convertRatioToPercentage(data[index3][key])
-						experimentStepMaterial1.Proportion = p1
-						experimentStepMaterial2.Proportion = p2
+						recipeMaterialGroups1.Proportion = p1
+						recipeMaterialGroups2.Proportion = p2
 					}
 
 					if value != "" {
 						experimentSteps = append(experimentSteps, experimentStep)
+						experimentName := ""
+						if len(data) > 1 && len(data[1]) > key {
+							experimentName = data[1][key]
+						}
+						recipes = append(recipes, entity.Recipes{
+							ID:              experimentStep.RecipeID,
+							RecipeName:      experimentName + experimentStep.StepName,
+							RecipeSignature: "",
+							Sort:            int(recipeNum) + key*20 + rowIndex,
+						})
 						switch row[0] {
 						case "C1", "C2":
-							experimentStepMaterials = append(experimentStepMaterials, experimentStepMaterial1)
+							recipeMaterialGroups = append(recipeMaterialGroups, recipeMaterialGroups1)
 						case "C3", "C4":
-							experimentStepMaterials = append(experimentStepMaterials, experimentStepMaterial2)
+							recipeMaterialGroups = append(recipeMaterialGroups, recipeMaterialGroups2)
 						default:
-							experimentStepMaterials = append(experimentStepMaterials, experimentStepMaterial1)
-							experimentStepMaterials = append(experimentStepMaterials, experimentStepMaterial2)
+							recipeMaterialGroups = append(recipeMaterialGroups, recipeMaterialGroups1)
+							recipeMaterialGroups = append(recipeMaterialGroups, recipeMaterialGroups2)
 						}
 					}
 				}
@@ -733,43 +622,243 @@ func getData(fileId, userId string, data [][]string, uuidMap map[int]string,
 		}
 	}
 
-	// 去重
-	materials, experimentStepMaterials = DeduplicateMaterials(materials, experimentStepMaterials)
+	// 初始化实验数据
+	for k, id := range uuidMap {
+		experimentName := fmt.Sprintf("G%d", int(experimentNum)+k)
+		if len(data) > 1 && len(data[1]) > k {
+			experimentName = data[1][k]
+		}
 
-	return materials, experiments, experimentSteps, experimentStepMaterials, err
+		// 忽略没有实验步骤的实验
+		if _, ok := experimentExistsMap[id]; !ok {
+			continue
+		}
+
+		experiment := entity.Experiment{
+			ID:             id,
+			FileID:         fileId,
+			ExperimentName: experimentName,
+			EntryCategory:  1,
+			UserID:         userId,
+			Sort:           int(experimentNum) + k,
+		}
+		experiments = append(experiments, experiment)
+	}
+
+	return experiments, experimentSteps, recipes, recipeMaterialGroups, materials, err
+}
+
+// 过滤掉重复的数据
+func filterData(experiments []entity.Experiment, experimentSteps []entity.ExperimentSteps, recipes []entity.Recipes,
+	recipeMaterialGroups []entity.RecipeMaterialGroups, materials []entity.Materials, experimentInSignatureList []string,
+	recipeInSignatureMap map[string]string) ([]entity.Experiment, []entity.ExperimentSteps, []entity.Recipes,
+	[]entity.RecipeMaterialGroups, []entity.Materials) {
+	// 创建一个集合来快速检查签名是否存在
+	signatureSet := make(map[string]bool)
+	for _, signature := range experimentInSignatureList {
+		signatureSet[signature] = true
+	}
+
+	// 过滤 experiments
+	var filteredExperiments []entity.Experiment
+	validExperimentIDs := make(map[string]bool)
+	experimentCountMap := make(map[string]bool)
+	for _, exp := range experiments {
+		if _, exists := signatureSet[exp.ExperimentSignature]; !exists {
+			if _, exist := experimentCountMap[exp.ExperimentSignature]; !exist {
+				validExperimentIDs[exp.ID] = true
+				filteredExperiments = append(filteredExperiments, exp)
+			}
+		}
+		experimentCountMap[exp.ExperimentSignature] = true
+	}
+
+	// 过滤 experimentSteps
+	var filteredExperimentSteps []entity.ExperimentSteps
+	validRecipeIDs := make(map[string]bool)
+	for _, step := range experimentSteps {
+		if validExperimentIDs[step.ExperimentID] {
+			validRecipeIDs[step.RecipeID] = true
+			filteredExperimentSteps = append(filteredExperimentSteps, step)
+		}
+	}
+
+	// 过滤 Recipes
+	recipeCountMap := make(map[string]string)
+	stepReplaceMap := make(map[string]string)
+	var filteredRecipes []entity.Recipes
+	for _, recipe := range recipes {
+		if _, exists := recipeCountMap[recipe.RecipeSignature]; exists {
+			stepReplaceMap[recipe.ID] = recipeCountMap[recipe.RecipeSignature]
+			continue
+		}
+		recipeCountMap[recipe.RecipeSignature] = recipe.ID
+
+		if _, exists := validRecipeIDs[recipe.ID]; !exists {
+			continue
+		}
+		if _, exists := recipeInSignatureMap[recipe.RecipeSignature]; exists {
+			stepReplaceMap[recipe.ID] = recipeInSignatureMap[recipe.RecipeSignature]
+			continue
+		}
+		filteredRecipes = append(filteredRecipes, recipe)
+	}
+
+	// 替换重复的配方id
+	for k, step := range filteredExperimentSteps {
+		if _, exists := stepReplaceMap[step.RecipeID]; !exists {
+			continue
+		}
+		filteredExperimentSteps[k].RecipeID = stepReplaceMap[step.RecipeID]
+	}
+
+	// 过滤 experimentStepMaterials
+	var filteredRecipeMaterialGroups []entity.RecipeMaterialGroups
+	validMaterialGroupIDs := make(map[string]bool)
+	for _, recipeMaterial := range recipeMaterialGroups {
+		if validRecipeIDs[recipeMaterial.RecipeID] {
+			validMaterialGroupIDs[recipeMaterial.ExperimentMaterialGroupID] = true
+			filteredRecipeMaterialGroups = append(filteredRecipeMaterialGroups, recipeMaterial)
+		}
+	}
+
+	// 过滤 materials
+	var filteredMaterials []entity.Materials
+	for _, material := range materials {
+		if validMaterialGroupIDs[material.ExperimentMaterialGroupID] {
+			filteredMaterials = append(filteredMaterials, material)
+		}
+	}
+
+	return filteredExperiments, filteredExperimentSteps, filteredRecipes, filteredRecipeMaterialGroups,
+		filteredMaterials
+}
+
+// generateExperimentSignature 批量生成实验密钥
+func generateExperimentSignature(
+	experiments []entity.Experiment,
+	experimentSteps []entity.ExperimentSteps,
+	recipeMaterialGroups []entity.RecipeMaterialGroups,
+	materials []entity.Materials,
+) (map[string]string, []string) {
+	signatureMap, signatureList := make(map[string]string), make([]string, 0)
+
+	// 建立实验步骤映射
+	stepMap := make(map[string][]entity.ExperimentSteps)
+	for _, step := range experimentSteps {
+		stepMap[step.ExperimentID] = append(stepMap[step.ExperimentID], step)
+	}
+
+	// 建立步骤-材料组映射
+	stepMaterialMap := make(map[string][]entity.RecipeMaterialGroups)
+	for _, recipeMaterial := range recipeMaterialGroups {
+		stepMaterialMap[recipeMaterial.RecipeID] = append(stepMaterialMap[recipeMaterial.RecipeID], recipeMaterial)
+	}
+
+	// 建立材料组-材料映射
+	materialMap := make(map[string][]entity.Materials)
+	for _, material := range materials {
+		materialMap[material.ExperimentMaterialGroupID] = append(materialMap[material.ExperimentMaterialGroupID], material)
+	}
+
+	for _, experiment := range experiments {
+		var signatureElements []string
+
+		// 处理实验名称
+		// signatureElements = append(signatureElements, experiment.ExperimentName)
+
+		// 处理实验步骤
+		steps := stepMap[experiment.ID]
+		sort.Slice(steps, func(i, j int) bool {
+			return steps[i].StepName < steps[j].StepName
+		})
+		for _, step := range steps {
+			signatureElements = append(signatureElements, step.StepName, step.ResultValue, step.ExperimentCondition)
+
+			// 处理实验步骤的材料组
+			// 修正：使用 step.ExperimentStepID 作为键
+			stepMaterials := stepMaterialMap[step.ID]
+			sort.Slice(stepMaterials, func(i, j int) bool {
+				return stepMaterials[i].Proportion < stepMaterials[j].Proportion
+			})
+			for _, stepMaterial := range stepMaterials {
+				signatureElements = append(signatureElements, strconv.FormatFloat(stepMaterial.Proportion, 'f', 2, 64))
+
+				// 处理材料
+				materials := materialMap[stepMaterial.ExperimentMaterialGroupID]
+				sort.Slice(materials, func(i, j int) bool {
+					if materials[i].MaterialGroupName == materials[j].MaterialGroupName {
+						return materials[i].MaterialName < materials[j].MaterialName
+					}
+					return materials[i].MaterialGroupName < materials[j].MaterialGroupName
+				})
+				for _, material := range materials {
+					signatureElements = append(signatureElements, material.MaterialGroupName, material.MaterialName, strconv.FormatFloat(material.Percentage, 'f', 2, 64))
+				}
+			}
+		}
+
+		// 计算 MD5 哈希
+		signature := md5Hash(strings.Join(signatureElements, "|"))
+		signatureMap[experiment.ID] = signature
+		signatureList = append(signatureList, signature)
+	}
+
+	return signatureMap, signatureList
+}
+
+// 计算MD5哈希
+func md5Hash(input string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(input))
+	return hex.EncodeToString(hasher.Sum(nil))
 }
 
 // WriteData 将excel内容入库
-func WriteData(experimentFile entity.ExperimentFiles, materials []entity.Materials, experiments []entity.Experiment,
-	experimentSteps []entity.ExperimentSteps,
-	experimentStepMaterials []entity.ExperimentStepMaterial) error {
+func WriteData(experimentFile entity.ExperimentFiles, experiments []entity.Experiment,
+	experimentSteps []entity.ExperimentSteps, recipes []entity.Recipes,
+	recipeMaterialGroups []entity.RecipeMaterialGroups, materials []entity.Materials) error {
 	// 使用事务闭包
 	if err := db.Client.Transaction(func(tx *gorm.DB) error {
 		maxNum := 500
 		if err := tx.Create(experimentFile).Error; err != nil {
-			logger.Logger.Errorf("[Import] WriteData Create experimentFile err: %v", err)
+			logger.Logger.Errorf("[ExperimentService Import] WriteData Create experimentFile err: %v", err)
 			return err
 		}
 		if err := tx.CreateInBatches(materials, maxNum).Error; err != nil {
-			logger.Logger.Errorf("[Import] WriteData CreateInBatches materials err: %v", err)
+			logger.Logger.Errorf("[ExperimentService Import] WriteData CreateInBatches materials err: %v", err)
 			return err
 		}
 		if err := tx.CreateInBatches(experiments, maxNum).Error; err != nil {
-			logger.Logger.Errorf("[Import] WriteData CreateInBatches experiments err: %v", err)
+			logger.Logger.Errorf("[ExperimentService Import] WriteData CreateInBatches experiments err: %v", err)
 			return err
 		}
 		if err := tx.CreateInBatches(experimentSteps, maxNum).Error; err != nil {
-			logger.Logger.Errorf("[Import] WriteData CreateInBatches experimentSteps err: %v", err)
+			logger.Logger.Errorf("[ExperimentService Import] WriteData CreateInBatches experimentSteps err: %v", err)
 			return err
 		}
-		if err := tx.CreateInBatches(experimentStepMaterials, maxNum).Error; err != nil {
-			logger.Logger.Errorf("[Import] WriteData CreateInBatches experimentStepMaterials err: %v", err)
+		if len(recipes) > 0 {
+			if err := tx.CreateInBatches(recipes, maxNum).Error; err != nil {
+				logger.Logger.Errorf("[ExperimentService Import] WriteData CreateInBatches recipes err: %v", err)
+				return err
+			}
+		}
+		if len(recipeMaterialGroups) > 0 {
+			if err := tx.CreateInBatches(recipeMaterialGroups, maxNum).Error; err != nil {
+				logger.Logger.Errorf("[ExperimentService Import] WriteData CreateInBatches recipeMaterialGroups err: %v", err)
+				return err
+			}
+		}
+
+		// 执行存储过程去重Materials表
+		if err := tx.Exec("CALL remove_duplicate_material_groups()").Error; err != nil {
+			logger.Logger.Errorf("[ExperimentService Import] remove_duplicate_material_groups err: %v", err)
 			return err
 		}
 		return nil
 	}); err != nil {
 		logger.Logger.Errorf("[WriteData] Mysql err: %v", err)
-		return utils.NewBusinessError(utils.InternalError)
+		return utils.NewBusinessError(utils.DatabaseErrorCode)
 	}
 
 	return nil
@@ -833,8 +922,8 @@ func isExperimentCondition(cellValue, prefix string) bool {
 	return strings.HasPrefix(cellValue, prefix)
 }
 
-// getOrder 获取步骤顺序
-func getOrder(cellValue string) int {
+// getStepOrder 获取步骤顺序
+func getStepOrder(cellValue string) int {
 	switch {
 	case strings.HasPrefix(cellValue, "C"):
 		return 400 - ExtractTrailingNumberRegex(cellValue)

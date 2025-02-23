@@ -16,9 +16,31 @@ func (e *BusinessError) Error() string {
 }
 
 // NewBusinessError 创建一个新的业务错误
-func NewBusinessError(code int) *BusinessError {
+// func NewBusinessError(code int, args ...interface{}) *BusinessError {
+// 	messageTemplate, exists := ErrorMessages[code]
+// 	if !exists {
+// 		messageTemplate = "Unknown error code: %d"
+// 		args = []interface{}{code}
+// 	}
+// 	message := fmt.Sprintf(messageTemplate, args...)
+// 	return &BusinessError{
+// 		Code:    code,
+// 		Message: message,
+// 	}
+// }
+
+// NewBusinessError 创建一个新的业务错误实例
+func NewBusinessError(code int, args ...interface{}) *BusinessError {
+	messageTemplate, exists := ErrorMessages[code]
+	if !exists {
+		// 如果找不到对应的错误信息模板，使用默认模板
+		messageTemplate = "Unknown error code: %d"
+		args = []interface{}{code}
+	}
+	// 使用 fmt.Sprintf 对错误信息模板进行格式化
+	message := fmt.Sprintf(messageTemplate, args...)
 	return &BusinessError{
 		Code:    code,
-		Message: ErrorMessages[code],
+		Message: message,
 	}
 }

@@ -52,8 +52,10 @@ func (api *ExperimentApi) Import(ctx *gin.Context, req *dto.Empty) (res *dto.Emp
 
 	res, err = api.service.Import(ctx, userId.(string), file)
 	if err != nil {
-		logger.Logger.Errorf("[Import] Import Error: %v", err)
-		return nil, utils.NewBusinessError(utils.FileParsingFailedCode)
+		if businessErr, ok := err.(*utils.BusinessError); ok {
+			return nil, businessErr
+		}
+		return nil, utils.NewBusinessError(utils.InternalError)
 	}
 
 	return
@@ -74,7 +76,10 @@ func (api *ExperimentApi) List(ctx *gin.Context, req *data.ExperimentListRequest
 	res, err = api.service.List(ctx, req)
 	if err != nil {
 		logger.Logger.Errorf("[List] List Error: %v", err)
-		return nil, utils.NewBusinessError(utils.FileParsingFailedCode)
+		if businessErr, ok := err.(*utils.BusinessError); ok {
+			return nil, businessErr
+		}
+		return nil, utils.NewBusinessError(utils.InternalError)
 	}
 	return
 }
@@ -92,6 +97,12 @@ func (api *ExperimentApi) List(ctx *gin.Context, req *data.ExperimentListRequest
 // @Router /data/experiment [delete]
 func (api *ExperimentApi) Delete(ctx *gin.Context, req *data.ExperimentDeleteRequest) (res *dto.Empty, err error) {
 	res, err = api.service.Delete(ctx, req)
+	if err != nil {
+		if businessErr, ok := err.(*utils.BusinessError); ok {
+			return nil, businessErr
+		}
+		return nil, utils.NewBusinessError(utils.InternalError)
+	}
 	return
 }
 
@@ -113,27 +124,15 @@ func (api *ExperimentApi) Add(ctx *gin.Context, req *data.ExperimentAddRequest) 
 		return nil, utils.NewBusinessError(utils.UserNotFoundCode)
 	}
 
-	// 百分比校验
-	var totalProportion, totalPercentage float64
-	for _, step := range req.Steps {
-		for _, group := range step.MaterialGroups {
-			totalProportion += group.Proportion
-			for _, material := range group.Materials {
-				totalPercentage += material.Percentage
-			}
-			if totalPercentage != 100 {
-				return nil, utils.NewBusinessError(utils.MaterialProportionSumNot100Code)
-			}
-			totalPercentage = 0
-		}
-		if totalProportion != 100 {
-			return nil, utils.NewBusinessError(utils.MaterialGroupProportionNot100Code)
-		}
-		totalProportion = 0
-	}
-
 	// 调用服务层的 Add 方法进行实验数据插入
 	res, err = api.service.Add(ctx, userId.(string), req)
+	if err != nil {
+		if businessErr, ok := err.(*utils.BusinessError); ok {
+			return nil, businessErr
+		}
+		return nil, utils.NewBusinessError(utils.InternalError)
+	}
+
 	return res, err
 }
 
@@ -150,5 +149,12 @@ func (api *ExperimentApi) Add(ctx *gin.Context, req *data.ExperimentAddRequest) 
 // @Router /data/experiment [put]
 func (api *ExperimentApi) Edit(ctx *gin.Context, req *data.ExperimentUpdateRequest) (res *dto.Empty, err error) {
 	res, err = api.service.Edit(ctx, req)
+	if err != nil {
+		if businessErr, ok := err.(*utils.BusinessError); ok {
+			return nil, businessErr
+		}
+		return nil, utils.NewBusinessError(utils.InternalError)
+	}
+
 	return
 }

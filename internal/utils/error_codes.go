@@ -7,6 +7,7 @@ const (
 	InternalError = 500 // 服务器内部错误
 
 	// 用户模块
+	DatabaseErrorCode          = 1000 // 数据库错误
 	UserAlreadyExistsCode      = 1001 // 用户已存在
 	UserNotFoundCode           = 1002 // 用户未找到
 	UserInvalidCredentialsCode = 1003 // 用户凭证无效
@@ -44,7 +45,8 @@ const (
 	NewPasswordSameAsOldCode     = 1308 // 新密码与旧密码相同
 
 	// 文件相关
-	FileTooLargeCode = 1401 // 文件大小超出限制
+	FileTooLargeCode        = 1401 // 文件大小超出限制
+	DuplicateFileImportCode = 1402 // 文件重复导入
 
 	// 接口处理
 	FileParsingFailedCode = 3001 // 文件解析失败
@@ -54,6 +56,10 @@ const (
 	MaterialProportionSumNot100Code   = 4001 // 材料组占比总和不是100%
 	MaterialGroupProportionNot100Code = 4002 // 实验步骤中材料组的占比不是100%
 	ExperimentDoesNotExistCode        = 4003 // 实验不存在
+	DuplicateRecipeFormatCode         = 4004 // 配方重复
+	DuplicateExperimentFormatCode     = 4005 // 实验重复
+	RecipeDoesNotExistCode            = 4006 // 配方不存在
+
 )
 
 // ErrorMessages 错误信息映射
@@ -63,6 +69,7 @@ var ErrorMessages = map[int]string{
 	InternalError: "Internal Server Error",
 
 	// 用户模块
+	DatabaseErrorCode:          "Database Error",
 	UserAlreadyExistsCode:      "User already exists",
 	UserNotFoundCode:           "User not found",
 	UserInvalidCredentialsCode: "Invalid credentials",
@@ -100,13 +107,17 @@ var ErrorMessages = map[int]string{
 	PasswordGenerationFailedCode: "Failed to generate password",
 
 	// 文件相关
-	FileTooLargeCode: "File too large",
+	FileTooLargeCode:        "File too large",
+	DuplicateFileImportCode: "Duplicate file import",
 
 	// 接口处理
 	FileParsingFailedCode: "File parsing failed",
 
 	// 业务错误
 	MaterialProportionSumNot100Code:   "The sum of the material proportions in the material group is not 100%",
-	MaterialGroupProportionNot100Code: "The proportion of material groups in the experimental steps is not 100%",
+	MaterialGroupProportionNot100Code: "The proportion of the material group is not 100%",
 	ExperimentDoesNotExistCode:        "Experiment does not exist",
+	RecipeDoesNotExistCode:            "Recipe does not exist",
+	DuplicateRecipeFormatCode:         "This recipe is repeated with '%s'",
+	DuplicateExperimentFormatCode:     "This experiment is repeated with '%s'",
 }

@@ -56,6 +56,31 @@ func (ed *ExperimentDao) GetByFileID(ctx context.Context, fileID string) ([]*ent
 	return experiments, err
 }
 
+// GetByExperimentSignature 根据 experimentSignature 获取实验
+func (ed *ExperimentDao) GetByExperimentSignature(ctx context.Context, experimentSignature string) ([]*entity.Experiment, error) {
+	var experiments []*entity.Experiment
+	err := db.Client.WithContext(ctx).
+		Where(entity.ExperimentColumns.ExperimentSignature+" = ?", experimentSignature).
+		Find(&experiments).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return experiments, err
+}
+
+// GetExperimentInSignatureList 获取已存在的签名列表
+func (ed *ExperimentDao) GetExperimentInSignatureList(ctx context.Context,
+	experimentSignatureList []string) ([]string, error) {
+	var experimentInSignatureList []string
+	err := db.Client.WithContext(ctx).Model(&entity.Experiment{}).
+		Where(entity.ExperimentColumns.ExperimentSignature+" in ?", experimentSignatureList).
+		Pluck(entity.ExperimentColumns.ExperimentSignature, &experimentInSignatureList).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return experimentInSignatureList, err
+}
+
 // Update 更新实验信息
 func (ed *ExperimentDao) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	return db.Client.WithContext(ctx).
