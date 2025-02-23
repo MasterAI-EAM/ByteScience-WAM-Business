@@ -13,8 +13,7 @@ func NewInferenceService() *InferenceService {
 }
 
 // Prediction 根据配方推荐材料
-func (is *InferenceService) Prediction(ctx context.Context, req *data.PredictionRequest) (*data.PredictionResponse,
-	error) {
+func (is *InferenceService) Prediction(ctx context.Context, req *data.PredictionRequest) (*data.PredictionResponse, error) {
 
 	if req == nil || len(req.Steps) == 0 {
 		return nil, nil
@@ -23,9 +22,7 @@ func (is *InferenceService) Prediction(ctx context.Context, req *data.Prediction
 	list := make([]data.PredictionData, len(req.Steps))
 	for k, v := range req.Steps {
 		list[k] = data.PredictionData{
-			FileName:    "demo.xlsx",
 			StepName:    v.StepName,
-			Accuracy:    25.50,
 			ResultValue: "123",
 		}
 	}
@@ -35,9 +32,7 @@ func (is *InferenceService) Prediction(ctx context.Context, req *data.Prediction
 }
 
 // PredictionDemo 根据配方推荐材料
-func (is *InferenceService) PredictionDemo(ctx context.Context,
-	req *data.PredictionDemoRequest) (*data.PredictionDemoResponse,
-	error) {
+func (is *InferenceService) PredictionDemo(ctx context.Context, req *data.PredictionDemoRequest) (*data.PredictionDemoResponse, error) {
 
 	// 返回最终结果
 	return &data.PredictionDemoResponse{}, nil

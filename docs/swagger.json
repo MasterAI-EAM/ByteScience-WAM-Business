@@ -370,6 +370,188 @@
                 }
             }
         },
+        "/data/recipe": {
+            "get": {
+                "description": "根据分页请求获取配方列表，支持按配方名称进行筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "配方管理"
+                ],
+                "summary": "获取配方列表",
+                "parameters": [
+                    {
+                        "description": "请求参数，包含分页信息及筛选条件",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.RecipeListRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功获取配方列表，返回配方数据",
+                        "schema": {
+                            "$ref": "#/definitions/data.RecipeListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，如分页参数错误、筛选条件不符合要求",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是数据库查询失败等情况",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "根据提供的配方信息创建新的配方记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "配方管理"
+                ],
+                "summary": "添加新的配方",
+                "parameters": [
+                    {
+                        "description": "请求参数，包含新的配方信息",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.RecipeAddRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功添加配方信息",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Empty"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，如缺少必要字段或格式不正确",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是数据库插入失败等情况",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/data/recipe/form/list": {
+            "get": {
+                "description": "根据分页请求获取配方表单列表，支持按配方名称进行筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "配方管理"
+                ],
+                "summary": "获取配方表单列表",
+                "parameters": [
+                    {
+                        "description": "请求参数，包含分页信息及筛选条件",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.RecipeFormListRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功获取配方表单列表，返回配方数据",
+                        "schema": {
+                            "$ref": "#/definitions/data.RecipeFormListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，如分页参数错误、筛选条件不符合要求",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是数据库查询失败等情况",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/data/recipe/info": {
+            "get": {
+                "description": "根据传入的配方 ID 获取该配方的详细信息，包括材料组、材料信息以及基于此配方创建的实验信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "配方管理"
+                ],
+                "summary": "获取单个配方详情",
+                "parameters": [
+                    {
+                        "description": "请求参数，包含要查询的配方 ID",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.RecipeInfoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功获取单个配方详情，返回配方详细数据",
+                        "schema": {
+                            "$ref": "#/definitions/data.RecipeInfoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，如配方 ID 格式错误等",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是数据库查询失败等情况",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "description": "提供用户名和密码进行登录操作，验证用户身份并获取相应权限",
@@ -602,6 +784,19 @@
                 }
             }
         },
+        "data.ExperimentInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "Id 是实验的唯一标识符\n示例值: \"123e4567-e89b-12d3-a456-426614174000\"",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name 是实验的名称\n示例值: \"实验名称\"",
+                    "type": "string"
+                }
+            }
+        },
         "data.ExperimentListRequest": {
             "type": "object",
             "properties": {
@@ -655,6 +850,7 @@
         "data.ExperimentStepAdd": {
             "type": "object",
             "required": [
+                "recipeId",
                 "resultValue",
                 "stepName",
                 "stepOrder"
@@ -666,12 +862,10 @@
                     "maxLength": 255,
                     "example": "实验条件"
                 },
-                "materialGroups": {
-                    "description": "MaterialGroups []MaterialGroupAdd 材料组列表\n选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)\n示例值: [{\"materialGroupName\": \"材料组名称\", \"proportion\": 25.5, \"materials\": []}]",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.MaterialGroupAdd"
-                    }
+                "recipeId": {
+                    "description": "RecipeID string 配方ID\n配方的UUID",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174002"
                 },
                 "resultValue": {
                     "description": "ResultValue string 步骤结果值\n选填，实验步骤的结果值，最长 256 字符\n示例值: \"步骤结果值\"",
@@ -705,12 +899,10 @@
                     "type": "string",
                     "example": "实验条件"
                 },
-                "materialGroups": {
-                    "description": "MaterialGroups []MaterialGroupData 材料组\n该步骤中涉及的材料组信息",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.MaterialGroupData"
-                    }
+                "recipeId": {
+                    "description": "RecipeID string 配方ID\n配方的UUID",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174002"
                 },
                 "resultValue": {
                     "description": "ResultValue string 实验条件\n步骤对应的实验结果",
@@ -743,6 +935,7 @@
         "data.ExperimentStepUpdate": {
             "type": "object",
             "required": [
+                "recipeId",
                 "resultValue",
                 "stepName",
                 "stepOrder"
@@ -754,12 +947,10 @@
                     "maxLength": 255,
                     "example": "实验条件"
                 },
-                "materialGroups": {
-                    "description": "MaterialGroups []MaterialGroupUpdate 材料组列表\n选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)\n示例值: [{\"materialGroupName\": \"材料组名称\", \"proportion\": 25.5, \"materials\": []}]",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.MaterialGroupUpdate"
-                    }
+                "recipeId": {
+                    "description": "RecipeID string 配方ID\n配方的UUID",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174002"
                 },
                 "resultValue": {
                     "description": "ResultValue string 步骤结果值\n选填，实验步骤的结果值，最长 256 字符\n示例值: \"步骤结果值\"",
@@ -826,37 +1017,9 @@
                 }
             }
         },
-        "data.MaterialAdd": {
-            "type": "object",
-            "required": [
-                "materialName",
-                "percentage"
-            ],
-            "properties": {
-                "materialName": {
-                    "description": "MaterialName string 材料名称\n必填，材料的名称，最长 255 字符\n示例值: \"材料名称\"",
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1,
-                    "example": "材料名称"
-                },
-                "percentage": {
-                    "description": "Percentage float64 材料占比\n必填，材料在材料组中的占比，范围 0-100\n示例值: 60.00",
-                    "type": "number",
-                    "maximum": 100,
-                    "minimum": 0,
-                    "example": 60
-                }
-            }
-        },
         "data.MaterialData": {
             "type": "object",
             "properties": {
-                "materialId": {
-                    "description": "MaterialID string 材料ID\n唯一标识材料的UUID",
-                    "type": "string",
-                    "example": "123e4567-e89b-12d3-a456-426614174004"
-                },
                 "materialName": {
                     "description": "MaterialName string 材料名称\n材料的名称信息",
                     "type": "string",
@@ -869,44 +1032,9 @@
                 }
             }
         },
-        "data.MaterialGroupAdd": {
-            "type": "object",
-            "required": [
-                "materialGroupName",
-                "proportion"
-            ],
-            "properties": {
-                "materialGroupName": {
-                    "description": "MaterialGroupName string 材料组名称\n必填，材料组的名称，最长 255 字符\n示例值: \"材料组名称\"",
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1,
-                    "example": "材料组名称"
-                },
-                "materials": {
-                    "description": "Materials []MaterialAdd 材料列表\n选填，材料组内的具体材料信息, percentage的和为100(占比100%)\n示例值: [{\"materialName\": \"材料名称\", \"percentage\": 60.00}]",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.MaterialAdd"
-                    }
-                },
-                "proportion": {
-                    "description": "Proportion float64 材料组占比\n必填，材料组在实验步骤中的占比，范围 0-100\n示例值: 25.50",
-                    "type": "number",
-                    "maximum": 100,
-                    "minimum": 0,
-                    "example": 25.5
-                }
-            }
-        },
         "data.MaterialGroupData": {
             "type": "object",
             "properties": {
-                "materialGroupId": {
-                    "description": "MaterialGroupID string 材料组ID\n唯一标识材料组的UUID",
-                    "type": "string",
-                    "example": "123e4567-e89b-12d3-a456-426614174003"
-                },
                 "materialGroupName": {
                     "description": "MaterialGroupName string 材料组名称\n材料组的名称信息",
                     "type": "string",
@@ -926,55 +1054,49 @@
                 }
             }
         },
-        "data.MaterialGroupUpdate": {
+        "data.MaterialGroupInfo": {
             "type": "object",
-            "required": [
-                "materialGroupName",
-                "proportion"
-            ],
             "properties": {
-                "materialGroupName": {
-                    "description": "MaterialGroupName string 材料组名称\n必填，材料组的名称，最长 255 字符\n示例值: \"材料组名称\"",
+                "materialGroupId": {
+                    "description": "MaterialGroupID string 材料组ID\n唯一标识材料组的UUID",
                     "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1,
+                    "example": "123e4567-e89b-12d3-a456-426614174003"
+                },
+                "materialGroupName": {
+                    "description": "MaterialGroupName string 材料组名称\n材料组的名称信息",
+                    "type": "string",
                     "example": "材料组名称"
                 },
                 "materials": {
-                    "description": "Materials []MaterialUpdate 材料列表\n选填，材料组内的具体材料信息, percentage的和为100(占比100%)\n示例值: [{\"materialName\": \"材料名称\", \"percentage\": 60.00}]",
+                    "description": "Materials []MaterialInfo 材料列表\n材料组内的具体材料信息",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/data.MaterialUpdate"
+                        "$ref": "#/definitions/data.MaterialInfo"
                     }
                 },
                 "proportion": {
-                    "description": "Proportion float64 材料组占比\n必填，材料组在实验步骤中的占比，范围 0-100\n示例值: 25.50",
+                    "description": "Proportion float64 材料组占比\n材料组在实验步骤中的占比，百分比形式",
                     "type": "number",
-                    "maximum": 100,
-                    "minimum": 0,
                     "example": 25.5
                 }
             }
         },
-        "data.MaterialUpdate": {
+        "data.MaterialInfo": {
             "type": "object",
-            "required": [
-                "materialName",
-                "percentage"
-            ],
             "properties": {
-                "materialName": {
-                    "description": "MaterialName string 材料名称\n必填，材料的名称，最长 255 字符\n示例值: \"材料名称\"",
+                "materialId": {
+                    "description": "MaterialID string 材料ID\n唯一标识材料的UUID",
                     "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1,
+                    "example": "123e4567-e89b-12d3-a456-426614174004"
+                },
+                "materialName": {
+                    "description": "MaterialName string 材料名称\n材料的名称信息",
+                    "type": "string",
                     "example": "材料名称"
                 },
                 "percentage": {
-                    "description": "Percentage float64 材料占比\n必填，材料在材料组中的占比，范围 0-100\n示例值: 60.00",
+                    "description": "Percentage float64 材料占比\n材料在材料组中的占比，百分比形式",
                     "type": "number",
-                    "maximum": 100,
-                    "minimum": 0,
                     "example": 60
                 }
             }
@@ -982,16 +1104,6 @@
         "data.PredictionData": {
             "type": "object",
             "properties": {
-                "accuracy": {
-                    "description": "Accuracy float64 准确率\n实验结果预测的准确率 0~100",
-                    "type": "number",
-                    "example": 25.5
-                },
-                "fileName": {
-                    "description": "fileName string 文件名称\n实验结果预测的数据来源",
-                    "type": "string",
-                    "example": "来源文件名称"
-                },
                 "resultValue": {
                     "description": "ResultValue string 实验条件\n步骤对应的实验结果",
                     "type": "string",
@@ -1029,16 +1141,6 @@
         "data.PredictionDemoResponse": {
             "type": "object",
             "properties": {
-                "accuracy": {
-                    "description": "Accuracy float64 准确率\n实验结果预测的准确率 0~100",
-                    "type": "number",
-                    "example": 25.5
-                },
-                "fileName": {
-                    "description": "fileName string 文件名称\n实验结果预测的数据来源",
-                    "type": "string",
-                    "example": "来源文件名称"
-                },
                 "resultValue": {
                     "description": "ResultValue string 实验条件\n步骤对应的实验结果",
                     "type": "string",
@@ -1094,6 +1196,204 @@
                     "description": "StepName string 步骤名称\n描述实验步骤的名称",
                     "type": "string",
                     "example": "步骤名称"
+                }
+            }
+        },
+        "data.RecipeAddRequest": {
+            "type": "object",
+            "properties": {
+                "materialGroups": {
+                    "description": "MaterialGroupData []MaterialGroupData 材料组列表\n选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)\n示例值: [{\"materialGroupName\": \"材料组名称\", \"proportion\": 25.5, \"materials\": []}]",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.MaterialGroupData"
+                    }
+                },
+                "recipeName": {
+                    "description": "RecipeName string 配方名称，选填，长度限制：2-255字符\n用于按名称模糊查询实验记录",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2,
+                    "example": "配方名称"
+                },
+                "sort": {
+                    "description": "Sort int 排序 优先级从大到小\n选填，必须是大于等于 0 的整数\n示例值: 1",
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 1
+                }
+            }
+        },
+        "data.RecipeData": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "description": "CreatedAt 创建时间\n格式为时间戳，创建时间",
+                    "type": "string",
+                    "example": "2024-11-18T10:00:00Z"
+                },
+                "materialGroups": {
+                    "description": "MaterialGroups []MaterialGroupInfo 材料组\n该步骤中涉及的材料组信息",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.MaterialGroupInfo"
+                    }
+                },
+                "recipeId": {
+                    "description": "RecipeId string 配方id\nUUID",
+                    "type": "string",
+                    "example": "id"
+                },
+                "recipeName": {
+                    "description": "RecipeName string 配方名称\n配方名称信息",
+                    "type": "string",
+                    "example": "配方名称"
+                }
+            }
+        },
+        "data.RecipeFormListRequest": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "description": "Page 页码，选填，范围限制：[1,10000]\n用于分页查询管理员列表，最小值为1，最大值为10000",
+                    "type": "integer",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "example": 1
+                },
+                "pageSize": {
+                    "description": "PageSize 每页大小，选填，范围限制：[1,10000]\n用于限制每页返回的管理员数量，最小值为1，最大值为10000",
+                    "type": "integer",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "example": 10
+                },
+                "recipeName": {
+                    "description": "RecipeName 是一个可选的字符串字段，用于按配方名称进行模糊查询。\n该字段的长度必须在 2 到 255 个字符之间。如果不提供该字段，则不进行名称过滤。\n示例值：\"配方名称\"，系统会查找名称中包含该字符串的所有配方记录。",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2,
+                    "example": "配方名称"
+                }
+            }
+        },
+        "data.RecipeFormListResponse": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "description": "List 是一个 RecipeInfo 类型的切片，用于存储分页返回的配方记录列表。\n例如，列表中可能包含多个不同配方的信息，前端可以根据这些信息展示配方列表。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.RecipeInfo"
+                    }
+                },
+                "total": {
+                    "description": "Total 表示符合查询条件的配方记录的总条数。\n示例值：\"100\"，表示共有 100 条记录符合查询条件。",
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
+        "data.RecipeInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "Id 是配方的唯一标识符，通常为 UUID 格式的字符串。\n示例值: \"123e4567-e89b-12d3-a456-426614174000\"",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name 是配方的名称，用于描述该配方的内容或用途。\n示例值: \"实验名称\"",
+                    "type": "string"
+                }
+            }
+        },
+        "data.RecipeInfoRequest": {
+            "type": "object",
+            "required": [
+                "recipeId"
+            ],
+            "properties": {
+                "recipeId": {
+                    "description": "RecipeId 是配方的唯一标识符\n必填字段，格式为 UUID v4\n示例值: \"123e4567-e89b-12d3-a456-426614174000\"",
+                    "type": "string",
+                    "example": "配方id"
+                }
+            }
+        },
+        "data.RecipeInfoResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "description": "CreatedAt 表示配方的创建时间\n时间格式为 ISO 8601 格式的 UTC 时间戳\n示例值: \"2024-11-18T10:00:00Z\"",
+                    "type": "string",
+                    "example": "2024-11-18T10:00:00Z"
+                },
+                "materialGroups": {
+                    "description": "MaterialGroups 包含与该配方关联的材料组信息\n每个材料组都包含详细的材料信息",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.MaterialGroupInfo"
+                    }
+                },
+                "recipeBasedExperiment": {
+                    "description": "RecipeBasedExperiment 包含基于此配方创建的实验信息列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.ExperimentInfo"
+                    }
+                },
+                "recipeId": {
+                    "description": "RecipeId string 配方id\nUUID",
+                    "type": "string",
+                    "example": "id"
+                },
+                "recipeName": {
+                    "description": "RecipeName 表示配方的名称\n返回配方的名称信息\n示例值: \"配方名称\"",
+                    "type": "string",
+                    "example": "配方名称"
+                }
+            }
+        },
+        "data.RecipeListRequest": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "description": "Page 页码，选填，范围限制：[1,10000]\n用于分页查询管理员列表，最小值为1，最大值为10000",
+                    "type": "integer",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "example": 1
+                },
+                "pageSize": {
+                    "description": "PageSize 每页大小，选填，范围限制：[1,10000]\n用于限制每页返回的管理员数量，最小值为1，最大值为10000",
+                    "type": "integer",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "example": 10
+                },
+                "recipeName": {
+                    "description": "RecipeName string 配方名称，选填，长度限制：2-255字符\n用于按名称查询配方列表 前缀模糊匹配",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2,
+                    "example": "配方名称"
+                }
+            }
+        },
+        "data.RecipeListResponse": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "description": "List []RecipeData 数据\n分页返回的配方列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.RecipeData"
+                    }
+                },
+                "total": {
+                    "description": "Total int64 总条数\n返回符合条件的实验记录总数",
+                    "type": "integer",
+                    "example": 100
                 }
             }
         },

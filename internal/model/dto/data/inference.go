@@ -27,17 +27,9 @@ type PredictionResponse struct {
 }
 
 type PredictionData struct {
-	// fileName string 文件名称
-	// 实验结果预测的数据来源
-	FileName string `json:"fileName" example:"来源文件名称"`
-
 	// StepName string 步骤名称
 	// 描述实验步骤的名称
 	StepName string `json:"stepName" example:"步骤名称"`
-
-	// Accuracy float64 准确率
-	// 实验结果预测的准确率 0~100
-	Accuracy float64 `json:"accuracy" example:"25.50"`
 
 	// ResultValue string 实验条件
 	// 步骤对应的实验结果
@@ -59,17 +51,9 @@ type PredictionDemoRequest struct {
 }
 
 type PredictionDemoResponse struct {
-	// fileName string 文件名称
-	// 实验结果预测的数据来源
-	FileName string `json:"fileName" example:"来源文件名称"`
-
 	// StepName string 步骤名称
 	// 描述实验步骤的名称
 	StepName string `json:"stepName" example:"步骤名称"`
-
-	// Accuracy float64 准确率
-	// 实验结果预测的准确率 0~100
-	Accuracy float64 `json:"accuracy" example:"25.50"`
 
 	// ResultValue string 实验条件
 	// 步骤对应的实验结果

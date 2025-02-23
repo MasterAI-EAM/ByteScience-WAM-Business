@@ -185,6 +185,19 @@ definitions:
         example: 123e4567-e89b-12d3-a456-426614174000
         type: string
     type: object
+  data.ExperimentInfo:
+    properties:
+      id:
+        description: |-
+          Id 是实验的唯一标识符
+          示例值: "123e4567-e89b-12d3-a456-426614174000"
+        type: string
+      name:
+        description: |-
+          Name 是实验的名称
+          示例值: "实验名称"
+        type: string
+    type: object
   data.ExperimentListRequest:
     properties:
       experimentName:
@@ -246,14 +259,12 @@ definitions:
         example: 实验条件
         maxLength: 255
         type: string
-      materialGroups:
+      recipeId:
         description: |-
-          MaterialGroups []MaterialGroupAdd 材料组列表
-          选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)
-          示例值: [{"materialGroupName": "材料组名称", "proportion": 25.5, "materials": []}]
-        items:
-          $ref: '#/definitions/data.MaterialGroupAdd'
-        type: array
+          RecipeID string 配方ID
+          配方的UUID
+        example: 123e4567-e89b-12d3-a456-426614174002
+        type: string
       resultValue:
         description: |-
           ResultValue string 步骤结果值
@@ -280,6 +291,7 @@ definitions:
         minimum: 1
         type: integer
     required:
+    - recipeId
     - resultValue
     - stepName
     - stepOrder
@@ -292,13 +304,12 @@ definitions:
           步骤对应的实验条件描述
         example: 实验条件
         type: string
-      materialGroups:
+      recipeId:
         description: |-
-          MaterialGroups []MaterialGroupData 材料组
-          该步骤中涉及的材料组信息
-        items:
-          $ref: '#/definitions/data.MaterialGroupData'
-        type: array
+          RecipeID string 配方ID
+          配方的UUID
+        example: 123e4567-e89b-12d3-a456-426614174002
+        type: string
       resultValue:
         description: |-
           ResultValue string 实验条件
@@ -344,14 +355,12 @@ definitions:
         example: 实验条件
         maxLength: 255
         type: string
-      materialGroups:
+      recipeId:
         description: |-
-          MaterialGroups []MaterialGroupUpdate 材料组列表
-          选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)
-          示例值: [{"materialGroupName": "材料组名称", "proportion": 25.5, "materials": []}]
-        items:
-          $ref: '#/definitions/data.MaterialGroupUpdate'
-        type: array
+          RecipeID string 配方ID
+          配方的UUID
+        example: 123e4567-e89b-12d3-a456-426614174002
+        type: string
       resultValue:
         description: |-
           ResultValue string 步骤结果值
@@ -378,6 +387,7 @@ definitions:
         minimum: 1
         type: integer
     required:
+    - recipeId
     - resultValue
     - stepName
     - stepOrder
@@ -435,38 +445,8 @@ definitions:
     required:
     - experimentId
     type: object
-  data.MaterialAdd:
-    properties:
-      materialName:
-        description: |-
-          MaterialName string 材料名称
-          必填，材料的名称，最长 255 字符
-          示例值: "材料名称"
-        example: 材料名称
-        maxLength: 255
-        minLength: 1
-        type: string
-      percentage:
-        description: |-
-          Percentage float64 材料占比
-          必填，材料在材料组中的占比，范围 0-100
-          示例值: 60.00
-        example: 60
-        maximum: 100
-        minimum: 0
-        type: number
-    required:
-    - materialName
-    - percentage
-    type: object
   data.MaterialData:
     properties:
-      materialId:
-        description: |-
-          MaterialID string 材料ID
-          唯一标识材料的UUID
-        example: 123e4567-e89b-12d3-a456-426614174004
-        type: string
       materialName:
         description: |-
           MaterialName string 材料名称
@@ -480,46 +460,8 @@ definitions:
         example: 60
         type: number
     type: object
-  data.MaterialGroupAdd:
-    properties:
-      materialGroupName:
-        description: |-
-          MaterialGroupName string 材料组名称
-          必填，材料组的名称，最长 255 字符
-          示例值: "材料组名称"
-        example: 材料组名称
-        maxLength: 255
-        minLength: 1
-        type: string
-      materials:
-        description: |-
-          Materials []MaterialAdd 材料列表
-          选填，材料组内的具体材料信息, percentage的和为100(占比100%)
-          示例值: [{"materialName": "材料名称", "percentage": 60.00}]
-        items:
-          $ref: '#/definitions/data.MaterialAdd'
-        type: array
-      proportion:
-        description: |-
-          Proportion float64 材料组占比
-          必填，材料组在实验步骤中的占比，范围 0-100
-          示例值: 25.50
-        example: 25.5
-        maximum: 100
-        minimum: 0
-        type: number
-    required:
-    - materialGroupName
-    - proportion
-    type: object
   data.MaterialGroupData:
     properties:
-      materialGroupId:
-        description: |-
-          MaterialGroupID string 材料组ID
-          唯一标识材料组的UUID
-        example: 123e4567-e89b-12d3-a456-426614174003
-        type: string
       materialGroupName:
         description: |-
           MaterialGroupName string 材料组名称
@@ -540,76 +482,57 @@ definitions:
         example: 25.5
         type: number
     type: object
-  data.MaterialGroupUpdate:
+  data.MaterialGroupInfo:
     properties:
+      materialGroupId:
+        description: |-
+          MaterialGroupID string 材料组ID
+          唯一标识材料组的UUID
+        example: 123e4567-e89b-12d3-a456-426614174003
+        type: string
       materialGroupName:
         description: |-
           MaterialGroupName string 材料组名称
-          必填，材料组的名称，最长 255 字符
-          示例值: "材料组名称"
+          材料组的名称信息
         example: 材料组名称
-        maxLength: 255
-        minLength: 1
         type: string
       materials:
         description: |-
-          Materials []MaterialUpdate 材料列表
-          选填，材料组内的具体材料信息, percentage的和为100(占比100%)
-          示例值: [{"materialName": "材料名称", "percentage": 60.00}]
+          Materials []MaterialInfo 材料列表
+          材料组内的具体材料信息
         items:
-          $ref: '#/definitions/data.MaterialUpdate'
+          $ref: '#/definitions/data.MaterialInfo'
         type: array
       proportion:
         description: |-
           Proportion float64 材料组占比
-          必填，材料组在实验步骤中的占比，范围 0-100
-          示例值: 25.50
+          材料组在实验步骤中的占比，百分比形式
         example: 25.5
-        maximum: 100
-        minimum: 0
         type: number
-    required:
-    - materialGroupName
-    - proportion
     type: object
-  data.MaterialUpdate:
+  data.MaterialInfo:
     properties:
+      materialId:
+        description: |-
+          MaterialID string 材料ID
+          唯一标识材料的UUID
+        example: 123e4567-e89b-12d3-a456-426614174004
+        type: string
       materialName:
         description: |-
           MaterialName string 材料名称
-          必填，材料的名称，最长 255 字符
-          示例值: "材料名称"
+          材料的名称信息
         example: 材料名称
-        maxLength: 255
-        minLength: 1
         type: string
       percentage:
         description: |-
           Percentage float64 材料占比
-          必填，材料在材料组中的占比，范围 0-100
-          示例值: 60.00
+          材料在材料组中的占比，百分比形式
         example: 60
-        maximum: 100
-        minimum: 0
         type: number
-    required:
-    - materialName
-    - percentage
     type: object
   data.PredictionData:
     properties:
-      accuracy:
-        description: |-
-          Accuracy float64 准确率
-          实验结果预测的准确率 0~100
-        example: 25.5
-        type: number
-      fileName:
-        description: |-
-          fileName string 文件名称
-          实验结果预测的数据来源
-        example: 来源文件名称
-        type: string
       resultValue:
         description: |-
           ResultValue string 实验条件
@@ -647,18 +570,6 @@ definitions:
     type: object
   data.PredictionDemoResponse:
     properties:
-      accuracy:
-        description: |-
-          Accuracy float64 准确率
-          实验结果预测的准确率 0~100
-        example: 25.5
-        type: number
-      fileName:
-        description: |-
-          fileName string 文件名称
-          实验结果预测的数据来源
-        example: 来源文件名称
-        type: string
       resultValue:
         description: |-
           ResultValue string 实验条件
@@ -713,6 +624,208 @@ definitions:
           描述实验步骤的名称
         example: 步骤名称
         type: string
+    type: object
+  data.RecipeAddRequest:
+    properties:
+      materialGroups:
+        description: |-
+          MaterialGroupData []MaterialGroupData 材料组列表
+          选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)
+          示例值: [{"materialGroupName": "材料组名称", "proportion": 25.5, "materials": []}]
+        items:
+          $ref: '#/definitions/data.MaterialGroupData'
+        type: array
+      recipeName:
+        description: |-
+          RecipeName string 配方名称，选填，长度限制：2-255字符
+          用于按名称模糊查询实验记录
+        example: 配方名称
+        maxLength: 255
+        minLength: 2
+        type: string
+      sort:
+        description: |-
+          Sort int 排序 优先级从大到小
+          选填，必须是大于等于 0 的整数
+          示例值: 1
+        example: 1
+        minimum: 0
+        type: integer
+    type: object
+  data.RecipeData:
+    properties:
+      createdAt:
+        description: |-
+          CreatedAt 创建时间
+          格式为时间戳，创建时间
+        example: "2024-11-18T10:00:00Z"
+        type: string
+      materialGroups:
+        description: |-
+          MaterialGroups []MaterialGroupInfo 材料组
+          该步骤中涉及的材料组信息
+        items:
+          $ref: '#/definitions/data.MaterialGroupInfo'
+        type: array
+      recipeId:
+        description: |-
+          RecipeId string 配方id
+          UUID
+        example: id
+        type: string
+      recipeName:
+        description: |-
+          RecipeName string 配方名称
+          配方名称信息
+        example: 配方名称
+        type: string
+    type: object
+  data.RecipeFormListRequest:
+    properties:
+      page:
+        description: |-
+          Page 页码，选填，范围限制：[1,10000]
+          用于分页查询管理员列表，最小值为1，最大值为10000
+        example: 1
+        maximum: 10000
+        minimum: 1
+        type: integer
+      pageSize:
+        description: |-
+          PageSize 每页大小，选填，范围限制：[1,10000]
+          用于限制每页返回的管理员数量，最小值为1，最大值为10000
+        example: 10
+        maximum: 10000
+        minimum: 1
+        type: integer
+      recipeName:
+        description: |-
+          RecipeName 是一个可选的字符串字段，用于按配方名称进行模糊查询。
+          该字段的长度必须在 2 到 255 个字符之间。如果不提供该字段，则不进行名称过滤。
+          示例值："配方名称"，系统会查找名称中包含该字符串的所有配方记录。
+        example: 配方名称
+        maxLength: 255
+        minLength: 2
+        type: string
+    type: object
+  data.RecipeFormListResponse:
+    properties:
+      list:
+        description: |-
+          List 是一个 RecipeInfo 类型的切片，用于存储分页返回的配方记录列表。
+          例如，列表中可能包含多个不同配方的信息，前端可以根据这些信息展示配方列表。
+        items:
+          $ref: '#/definitions/data.RecipeInfo'
+        type: array
+      total:
+        description: |-
+          Total 表示符合查询条件的配方记录的总条数。
+          示例值："100"，表示共有 100 条记录符合查询条件。
+        example: 100
+        type: integer
+    type: object
+  data.RecipeInfo:
+    properties:
+      id:
+        description: |-
+          Id 是配方的唯一标识符，通常为 UUID 格式的字符串。
+          示例值: "123e4567-e89b-12d3-a456-426614174000"
+        type: string
+      name:
+        description: |-
+          Name 是配方的名称，用于描述该配方的内容或用途。
+          示例值: "实验名称"
+        type: string
+    type: object
+  data.RecipeInfoRequest:
+    properties:
+      recipeId:
+        description: |-
+          RecipeId 是配方的唯一标识符
+          必填字段，格式为 UUID v4
+          示例值: "123e4567-e89b-12d3-a456-426614174000"
+        example: 配方id
+        type: string
+    required:
+    - recipeId
+    type: object
+  data.RecipeInfoResponse:
+    properties:
+      createdAt:
+        description: |-
+          CreatedAt 表示配方的创建时间
+          时间格式为 ISO 8601 格式的 UTC 时间戳
+          示例值: "2024-11-18T10:00:00Z"
+        example: "2024-11-18T10:00:00Z"
+        type: string
+      materialGroups:
+        description: |-
+          MaterialGroups 包含与该配方关联的材料组信息
+          每个材料组都包含详细的材料信息
+        items:
+          $ref: '#/definitions/data.MaterialGroupInfo'
+        type: array
+      recipeBasedExperiment:
+        description: RecipeBasedExperiment 包含基于此配方创建的实验信息列表
+        items:
+          $ref: '#/definitions/data.ExperimentInfo'
+        type: array
+      recipeId:
+        description: |-
+          RecipeId string 配方id
+          UUID
+        example: id
+        type: string
+      recipeName:
+        description: |-
+          RecipeName 表示配方的名称
+          返回配方的名称信息
+          示例值: "配方名称"
+        example: 配方名称
+        type: string
+    type: object
+  data.RecipeListRequest:
+    properties:
+      page:
+        description: |-
+          Page 页码，选填，范围限制：[1,10000]
+          用于分页查询管理员列表，最小值为1，最大值为10000
+        example: 1
+        maximum: 10000
+        minimum: 1
+        type: integer
+      pageSize:
+        description: |-
+          PageSize 每页大小，选填，范围限制：[1,10000]
+          用于限制每页返回的管理员数量，最小值为1，最大值为10000
+        example: 10
+        maximum: 10000
+        minimum: 1
+        type: integer
+      recipeName:
+        description: |-
+          RecipeName string 配方名称，选填，长度限制：2-255字符
+          用于按名称查询配方列表 前缀模糊匹配
+        example: 配方名称
+        maxLength: 255
+        minLength: 2
+        type: string
+    type: object
+  data.RecipeListResponse:
+    properties:
+      list:
+        description: |-
+          List []RecipeData 数据
+          分页返回的配方列表
+        items:
+          $ref: '#/definitions/data.RecipeData'
+        type: array
+      total:
+        description: |-
+          Total int64 总条数
+          返回符合条件的实验记录总数
+        example: 100
+        type: integer
     type: object
   dto.Empty:
     type: object
@@ -968,6 +1081,125 @@ paths:
       summary: 根据配方预测实验结果（Demo）
       tags:
       - 模型预测
+  /data/recipe:
+    get:
+      consumes:
+      - application/json
+      description: 根据分页请求获取配方列表，支持按配方名称进行筛选
+      parameters:
+      - description: 请求参数，包含分页信息及筛选条件
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/data.RecipeListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功获取配方列表，返回配方数据
+          schema:
+            $ref: '#/definitions/data.RecipeListResponse'
+        "400":
+          description: 请求参数错误，如分页参数错误、筛选条件不符合要求
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 服务器内部错误，可能是数据库查询失败等情况
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 获取配方列表
+      tags:
+      - 配方管理
+    post:
+      consumes:
+      - application/json
+      description: 根据提供的配方信息创建新的配方记录
+      parameters:
+      - description: 请求参数，包含新的配方信息
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/data.RecipeAddRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功添加配方信息
+          schema:
+            $ref: '#/definitions/dto.Empty'
+        "400":
+          description: 请求参数错误，如缺少必要字段或格式不正确
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 服务器内部错误，可能是数据库插入失败等情况
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 添加新的配方
+      tags:
+      - 配方管理
+  /data/recipe/form/list:
+    get:
+      consumes:
+      - application/json
+      description: 根据分页请求获取配方表单列表，支持按配方名称进行筛选
+      parameters:
+      - description: 请求参数，包含分页信息及筛选条件
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/data.RecipeFormListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功获取配方表单列表，返回配方数据
+          schema:
+            $ref: '#/definitions/data.RecipeFormListResponse'
+        "400":
+          description: 请求参数错误，如分页参数错误、筛选条件不符合要求
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 服务器内部错误，可能是数据库查询失败等情况
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 获取配方表单列表
+      tags:
+      - 配方管理
+  /data/recipe/info:
+    get:
+      consumes:
+      - application/json
+      description: 根据传入的配方 ID 获取该配方的详细信息，包括材料组、材料信息以及基于此配方创建的实验信息
+      parameters:
+      - description: 请求参数，包含要查询的配方 ID
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/data.RecipeInfoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功获取单个配方详情，返回配方详细数据
+          schema:
+            $ref: '#/definitions/data.RecipeInfoResponse'
+        "400":
+          description: 请求参数错误，如配方 ID 格式错误等
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 服务器内部错误，可能是数据库查询失败等情况
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 获取单个配方详情
+      tags:
+      - 配方管理
   /login:
     post:
       consumes:
