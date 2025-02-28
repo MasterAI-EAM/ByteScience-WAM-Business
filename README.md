@@ -16,7 +16,8 @@
 确保你已经安装并配置了 MySQL 和 Redis。如果没有安装，可以参考以下链接进行安装：
 - [MySQL 安装教程](https://dev.mysql.com/doc/refman/8.0/en/installing.html)
 - [Redis 安装教程](https://redis.io/docs/getting-started/)
-
+或者使用docker
+- 执行 ```docker-compose up -d```
 
 ## 服务启动
 * 安装依赖
