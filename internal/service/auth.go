@@ -41,14 +41,14 @@ func (as AuthService) Login(ctx context.Context, req *auth.LoginRequest) (*auth.
 	// 检查用户是否存在
 	if err != nil {
 		logger.Logger.Errorf("[Login] Error fetching user by %s: %v", identifierType, err)
-		return nil, utils.NewBusinessError(utils.InternalError)
+		return nil, utils.NewBusinessError(utils.InternalError, "")
 	}
 	if admin == nil {
-		return nil, utils.NewBusinessError(utils.UserNotFoundCode)
+		return nil, utils.NewBusinessError(utils.UserNotFoundCode, "")
 	}
 
 	if admin.Status == 0 {
-		return nil, utils.NewBusinessError(utils.UserNotFoundCode)
+		return nil, utils.NewBusinessError(utils.UserNotFoundCode, "")
 	}
 
 	// 验证密码是否正确
@@ -56,18 +56,18 @@ func (as AuthService) Login(ctx context.Context, req *auth.LoginRequest) (*auth.
 	if err != nil {
 		// 如果发生了错误（非匹配错误），记录日志并返回
 		logger.Logger.Errorf("[Login] Error verifying password: %v", err)
-		return nil, utils.NewBusinessError(utils.InternalError)
+		return nil, utils.NewBusinessError(utils.InternalError, "")
 	}
 	if !isMatch {
 		// 如果密码不匹配，返回无效凭证错误
-		return nil, utils.NewBusinessError(utils.PasswordIncorrectCode)
+		return nil, utils.NewBusinessError(utils.PasswordIncorrectCode, "")
 	}
 
 	// 生成 JWT Token
 	token, err := utils.GetToken(conf.GlobalConf.Jwt.AccessSecret, conf.GlobalConf.Jwt.AccessExpire, admin.ID)
 	if err != nil {
 		logger.Logger.Errorf("[Login] Error utils.GetToken: %v", err)
-		return nil, utils.NewBusinessError(utils.InternalError)
+		return nil, utils.NewBusinessError(utils.InternalError, "")
 	}
 
 	// 记录登陆时间
@@ -87,12 +87,12 @@ func (as AuthService) Login(ctx context.Context, req *auth.LoginRequest) (*auth.
 func (as AuthService) ChangePassword(ctx context.Context, req *auth.ChangePasswordRequest) error {
 	// 检查确认密码是否匹配新密码（额外保险，即使已通过验证器）
 	if req.NewPassword != req.ConfirmPassword {
-		return utils.NewBusinessError(utils.PasswordMismatchCode)
+		return utils.NewBusinessError(utils.PasswordMismatchCode, "")
 	}
 
 	// 新旧密码一样
 	if req.NewPassword == req.OldPassword {
-		return utils.NewBusinessError(utils.NewPasswordSameAsOldCode)
+		return utils.NewBusinessError(utils.NewPasswordSameAsOldCode, "")
 	}
 
 	// 确定 Identifier 类型（用户名、邮箱或手机号）
@@ -112,10 +112,10 @@ func (as AuthService) ChangePassword(ctx context.Context, req *auth.ChangePasswo
 	// 检查用户是否存在
 	if err != nil {
 		logger.Logger.Errorf("[ChangePassword] Error fetching user by %s: %v", identifierType, err)
-		return utils.NewBusinessError(utils.InternalError)
+		return utils.NewBusinessError(utils.InternalError, "")
 	}
 	if admin == nil {
-		return utils.NewBusinessError(utils.UserNotFoundCode)
+		return utils.NewBusinessError(utils.UserNotFoundCode, "")
 	}
 
 	// 验证旧密码是否正确
@@ -123,18 +123,18 @@ func (as AuthService) ChangePassword(ctx context.Context, req *auth.ChangePasswo
 	if err != nil {
 		// 如果发生了错误（非匹配错误），记录日志并返回
 		logger.Logger.Errorf("[ChangePassword] Error verifying password: %v", err)
-		return utils.NewBusinessError(utils.InternalError)
+		return utils.NewBusinessError(utils.InternalError, "")
 	}
 	if !isMatch {
 		// 如果密码不匹配，返回无效凭证错误
-		return utils.NewBusinessError(utils.OldPasswordIncorrectCode)
+		return utils.NewBusinessError(utils.OldPasswordIncorrectCode, "")
 	}
 
 	// 加密新密码
 	hashedPassword, err := utils.EncryptPassword(req.NewPassword)
 	if err != nil {
 		logger.Logger.Errorf("[ChangePassword] Error encrypting new password: %v", err)
-		return utils.NewBusinessError(utils.PasswordGenerationFailedCode)
+		return utils.NewBusinessError(utils.PasswordGenerationFailedCode, "")
 	}
 
 	// 更新密码
@@ -144,7 +144,7 @@ func (as AuthService) ChangePassword(ctx context.Context, req *auth.ChangePasswo
 	}
 	if err := as.dao.Update(ctx, admin.ID, updates); err != nil {
 		logger.Logger.Errorf("[ChangePassword] Error updating password for user %s: %v", admin.ID, err)
-		return utils.NewBusinessError(utils.PasswordChangeFailedCode)
+		return utils.NewBusinessError(utils.PasswordChangeFailedCode, "")
 	}
 
 	return nil
