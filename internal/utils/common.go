@@ -33,6 +33,24 @@ func Contains[T comparable](slice []T, value T) bool {
 	return false
 }
 
+// Difference 找出a中但不在b中的元素，支持泛型类型
+func Difference[T comparable](a, b []T) []T {
+	// 创建一个哈希集合来存储b的元素
+	bSet := make(map[T]struct{})
+	for _, item := range b {
+		bSet[item] = struct{}{}
+	}
+
+	// 遍历数组a，找出不在b中的元素
+	var result []T
+	for _, item := range a {
+		if _, found := bSet[item]; !found {
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
 // RemoveDuplicates 去重函数，适用于任何可比较类型
 func RemoveDuplicates[T comparable](arr []T) []T {
 	seen := make(map[T]struct{}) // 用于存储已遇到的元素

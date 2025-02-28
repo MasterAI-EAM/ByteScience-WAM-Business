@@ -2,9 +2,10 @@ package utils
 
 // 错误码定义
 const (
-	Success       = 0   // 成功
-	BadRequest    = 400 // 请求错误
-	InternalError = 500 // 服务器内部错误
+	Success              = 0   // 成功
+	BadRequest           = 400 // 请求错误
+	InternalError        = 500 // 服务器内部错误
+	ExternalRequestError = 600 // 外部请求错误
 
 	// 用户模块
 	DatabaseErrorCode          = 1000 // 数据库错误
@@ -59,6 +60,7 @@ const (
 	DuplicateRecipeFormatCode         = 4004 // 配方重复
 	DuplicateExperimentFormatCode     = 4005 // 实验重复
 	RecipeDoesNotExistCode            = 4006 // 配方不存在
+	RecipeDeletionIsNotAllowedCode    = 4007 // 不允许删除配方
 
 )
 
@@ -120,4 +122,5 @@ var ErrorMessages = map[int]string{
 	RecipeDoesNotExistCode:            "Recipe does not exist",
 	DuplicateRecipeFormatCode:         "This recipe is repeated with '%s'",
 	DuplicateExperimentFormatCode:     "This experiment is repeated with '%s'",
+	RecipeDeletionIsNotAllowedCode:    "The recipe is in use and cannot be deleted.",
 }

@@ -44,6 +44,18 @@ func (ed *ExperimentDao) GetByID(ctx context.Context, id string) (*entity.Experi
 	return &experiment, err
 }
 
+// GetByIDList 根据 ID 获取实验
+func (ed *ExperimentDao) GetByIDList(ctx context.Context, idList []string) ([]entity.Experiment, error) {
+	var experimentList []entity.Experiment
+	err := db.Client.WithContext(ctx).
+		Where(entity.ExperimentColumns.ID+" in ?", idList).
+		Find(&experimentList).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return experimentList, err
+}
+
 // GetByFileID 根据 file_id 获取实验
 func (ed *ExperimentDao) GetByFileID(ctx context.Context, fileID string) ([]*entity.Experiment, error) {
 	var experiments []*entity.Experiment

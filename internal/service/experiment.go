@@ -50,7 +50,7 @@ func (ss *ExperimentService) List(ctx context.Context, req *data.ExperimentListR
 	})
 	if err != nil {
 		logger.Logger.Errorf("[ExperimentService List] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	// 获取所有实验ID
@@ -66,7 +66,7 @@ func (ss *ExperimentService) List(ctx context.Context, req *data.ExperimentListR
 	fileIDs = utils.RemoveDuplicates(fileIDs)
 	if err = db.Client.WithContext(ctx).Where("id IN (?)", fileIDs).Find(&files).Error; err != nil {
 		logger.Logger.Errorf("[ExperimentService List] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.InternalError)
+		return nil, utils.NewBusinessError(utils.InternalError, "")
 	}
 	for _, file := range files {
 		fileMap[file.ID] = file.FileName
@@ -78,7 +78,7 @@ func (ss *ExperimentService) List(ctx context.Context, req *data.ExperimentListR
 		Order("step_order DESC").
 		Find(&steps).Error; err != nil {
 		logger.Logger.Errorf("[ExperimentService List] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	// 获取所有步骤ID
@@ -134,11 +134,11 @@ func (ss *ExperimentService) Delete(ctx context.Context, req *data.ExperimentDel
 	experiment, err := ss.experimentDao.GetByID(ctx, req.ExperimentID)
 	if err != nil {
 		logger.Logger.Errorf("[ExperimentService Delete] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	if experiment == nil || experiment.ID == "" {
-		return nil, utils.NewBusinessError(utils.ExperimentDoesNotExistCode)
+		return nil, utils.NewBusinessError(utils.ExperimentDoesNotExistCode, "")
 	}
 
 	if err = db.Client.Transaction(func(tx *gorm.DB) error {
@@ -161,7 +161,7 @@ func (ss *ExperimentService) Delete(ctx context.Context, req *data.ExperimentDel
 		return nil
 	}); err != nil {
 		logger.Logger.Errorf("[ExperimentService Delete] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	return nil, err
@@ -222,11 +222,11 @@ func (ss *ExperimentService) Add(ctx context.Context, userId string, req *data.E
 	experimentList, err := ss.experimentDao.GetByExperimentSignature(ctx, experiment.ExperimentSignature)
 	if err != nil {
 		logger.Logger.Errorf("[ExperimentService Add] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	if len(experimentList) > 0 {
-		return nil, utils.NewBusinessError(utils.DuplicateExperimentFormatCode, experimentList[0].ExperimentName)
+		return nil, utils.NewBusinessError(utils.DuplicateExperimentFormatCode, "", experimentList[0].ExperimentName)
 	}
 
 	// 使用事务闭包
@@ -243,7 +243,7 @@ func (ss *ExperimentService) Add(ctx context.Context, userId string, req *data.E
 		return nil
 	}); err != nil {
 		logger.Logger.Errorf("[ExperimentService Add] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	return nil, nil
@@ -254,11 +254,11 @@ func (ss *ExperimentService) Edit(ctx context.Context, req *data.ExperimentUpdat
 	experiment, err := ss.experimentDao.GetByID(ctx, req.ExperimentID)
 	if err != nil {
 		logger.Logger.Errorf("[ExperimentService Edit] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	if experiment == nil || experiment.ID == "" {
-		return nil, utils.NewBusinessError(utils.ExperimentDoesNotExistCode)
+		return nil, utils.NewBusinessError(utils.ExperimentDoesNotExistCode, "")
 	}
 
 	experimentSteps := make([]entity.ExperimentSteps, 0)
@@ -293,7 +293,7 @@ func (ss *ExperimentService) Edit(ctx context.Context, req *data.ExperimentUpdat
 	experimentList, err := ss.experimentDao.GetByExperimentSignature(ctx, experiment.ExperimentSignature)
 	if err != nil {
 		logger.Logger.Errorf("[ExperimentService Add] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	// 标记是否为自身重复（允许修改的情况）
@@ -302,7 +302,7 @@ func (ss *ExperimentService) Edit(ctx context.Context, req *data.ExperimentUpdat
 	// 检查查询到的实验列表情况
 	if len(experimentList) > 0 && !isSelfDuplicate {
 		// 存在重复实验（非自身重复），返回业务错误
-		return nil, utils.NewBusinessError(utils.DuplicateExperimentFormatCode, experimentList[0].ExperimentName)
+		return nil, utils.NewBusinessError(utils.DuplicateExperimentFormatCode, "", experimentList[0].ExperimentName)
 	}
 
 	if err = db.Client.Transaction(func(tx *gorm.DB) error {
@@ -338,7 +338,7 @@ func (ss *ExperimentService) Edit(ctx context.Context, req *data.ExperimentUpdat
 		return nil
 	}); err != nil {
 		logger.Logger.Errorf("[ExperimentService Edit] Mysql err: %v", err)
-		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	return nil, nil
@@ -381,7 +381,7 @@ func (ss ExperimentService) Import(ctx context.Context, userId string, file *mul
 	experimentInSignatureList, err := ss.experimentDao.GetExperimentInSignatureList(ctx, experimentSignatureList)
 	if err != nil {
 		logger.Logger.Errorf("[ExperimentService Import] GetExperimentInSignatureList err: %v", err)
-		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	// 批量生成配方密钥
@@ -394,7 +394,7 @@ func (ss ExperimentService) Import(ctx context.Context, userId string, file *mul
 	recipeInSignatureMap, err := ss.recipeDao.GetRecipeInSignatureMap(ctx, recipeSignatureList)
 	if err != nil {
 		logger.Logger.Errorf("[ExperimentService Import] GetExperimentInSignatureList err: %v", err)
-		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	// 去掉密钥重复的实验、配方数据
@@ -403,12 +403,12 @@ func (ss ExperimentService) Import(ctx context.Context, userId string, file *mul
 
 	// 每条数据都导入过（文件重复导入）
 	if len(experiments) == 0 {
-		return nil, utils.NewBusinessError(utils.DuplicateFileImportCode)
+		return nil, utils.NewBusinessError(utils.DuplicateFileImportCode, "")
 	}
 
 	// 将数据入库
 	if err = WriteData(experimentFile, experiments, experimentSteps, recipes, recipeMaterialGroups, materials); err != nil {
-		return nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	return nil, nil
@@ -473,12 +473,12 @@ func getData(fileId, userId string, data [][]string, uuidMap map[int]string,
 	var experimentNum, recipeNum int64
 	if err = db.Client.Model(&entity.Experiment{}).Count(&experimentNum).Error; err != nil {
 		logger.Logger.Errorf("[getData] Mysql err: %v", err)
-		return nil, nil, nil, nil, nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, nil, nil, nil, nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	if err = db.Client.Model(&entity.Recipes{}).Count(&recipeNum).Error; err != nil {
 		logger.Logger.Errorf("[getData] Mysql err: %v", err)
-		return nil, nil, nil, nil, nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, nil, nil, nil, nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	experimentExistsMap := make(map[string]bool)
@@ -548,12 +548,13 @@ func getData(fileId, userId string, data [][]string, uuidMap map[int]string,
 					}
 
 					experimentStep := entity.ExperimentSteps{
-						ID:           uuid.NewString(),
-						RecipeID:     uuid.NewString(),
-						ExperimentID: uuidMap[key],
-						StepName:     row[0],
-						StepOrder:    getStepOrder(row[0]),
-						ResultValue:  value,
+						ID:                  uuid.NewString(),
+						RecipeID:            uuid.NewString(),
+						ExperimentID:        uuidMap[key],
+						StepName:            row[0],
+						StepOrder:           getStepOrder(row[0]),
+						ResultValue:         value,
+						ExperimentCondition: "",
 					}
 
 					// 没有实验步骤的实验要忽略入库
@@ -858,7 +859,7 @@ func WriteData(experimentFile entity.ExperimentFiles, experiments []entity.Exper
 		return nil
 	}); err != nil {
 		logger.Logger.Errorf("[WriteData] Mysql err: %v", err)
-		return utils.NewBusinessError(utils.DatabaseErrorCode)
+		return utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	return nil

@@ -33,6 +33,22 @@ type RecipeData struct {
 	// 配方名称信息
 	RecipeName string `json:"recipeName" example:"配方名称"`
 
+	// RecipeUsedInExperimentNum int64
+	// 配方被实验使用数
+	RecipeUsedInExperimentNum int64 `json:"recipeUsedInExperimentNum" example:"11"`
+
+	// Sort int
+	// 排序 优先级从大到小
+	Sort int `json:"sort" example:"1"`
+
+	// IsErr bool 是否发生错误
+	// 表示该配方数据处理过程中是否出现错误，true 表示有错误，false 表示无错误
+	IsErr bool `json:"isErr" example:"false"`
+
+	// ErrMsg string 错误信息
+	// 当 isErr 为 true 时，该字段包含具体的错误描述信息
+	ErrMsg string `json:"errMsg" example:"The proportion of the material group is not 100%"`
+
 	// CreatedAt 创建时间
 	// 格式为时间戳，创建时间
 	CreatedAt string `json:"createdAt" example:"2024-11-18T10:00:00Z"`
@@ -188,4 +204,34 @@ type RecipeAddRequest struct {
 	// 选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)
 	// 示例值: [{"materialGroupName": "材料组名称", "proportion": 25.5, "materials": []}]
 	MaterialGroups []MaterialGroupData `json:"materialGroups" validate:"omitempty,dive"`
+}
+
+// RecipeDeleteRequest 用于删除配方详情的请求体结构
+type RecipeDeleteRequest struct {
+	// RecipeId 是配方的唯一标识符
+	// 必填字段，格式为 UUID v4
+	// 示例值: "123e4567-e89b-12d3-a456-426614174000"
+	RecipeId string `json:"recipeId" validate:"required,uuid4" example:"配方id"`
+}
+
+// RecipeEditRequest 用于编辑配方详情的请求体结构
+type RecipeEditRequest struct {
+	// RecipeId 是配方的唯一标识符
+	// 必填字段，格式为 UUID v4
+	// 示例值: "123e4567-e89b-12d3-a456-426614174000"
+	RecipeId string `json:"recipeId" validate:"required,uuid4" example:"配方id"`
+
+	// RecipeName string 配方名称，选填，长度限制：2-255字符
+	// 用于按名称模糊查询实验记录
+	RecipeName string `json:"recipeName" validate:"required,min=2,max=255" example:"配方名称"`
+
+	// Sort int 排序 优先级从大到小
+	// 选填，必须是大于等于 0 的整数
+	// 示例值: 1
+	Sort int `json:"sort" validate:"required,min=0" example:"1"`
+
+	// MaterialGroupData []MaterialGroupData 材料组列表
+	// 选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)
+	// 示例值: [{"materialGroupName": "材料组名称", "proportion": 25.5, "materials": []}]
+	MaterialGroups []MaterialGroupInfo `json:"materialGroups" validate:"required,dive"`
 }

@@ -1,4 +1,78 @@
 definitions:
+  ai.ForwardDirectionRequest:
+    properties:
+      experimentCondition:
+        description: |-
+          ExperimentCondition string 实验条件
+          步骤对应的实验条件描述
+        example: 实验条件
+        type: string
+      materialGroups:
+        description: |-
+          MaterialGroups []MaterialGroupData 材料组
+          该步骤中涉及的材料组信息
+        items:
+          $ref: '#/definitions/data.MaterialGroupData'
+        type: array
+      stepName:
+        description: |-
+          StepName string 步骤名称
+          描述实验步骤的名称
+        example: 步骤名称
+        type: string
+    type: object
+  ai.ForwardDirectionResponse:
+    properties:
+      aiResult:
+        allOf:
+        - $ref: '#/definitions/ai.ForwardDirectionResult'
+        description: |-
+          AiResult ForwardDirectionResult 数据
+          ai的结果
+      historyList:
+        description: |-
+          historyList []ForwardDirectionResultInfo 数据
+          实验记录的结果
+        items:
+          $ref: '#/definitions/ai.ForwardDirectionResultInfo'
+        type: array
+    type: object
+  ai.ForwardDirectionResult:
+    properties:
+      resultValue:
+        description: |-
+          ResultValue string 实验条件
+          步骤对应的实验结果
+        example: 步骤结果值
+        type: string
+      stepName:
+        description: |-
+          StepName string 步骤名称
+          描述实验步骤的名称
+        example: 步骤名称
+        type: string
+    type: object
+  ai.ForwardDirectionResultInfo:
+    properties:
+      experimentName:
+        description: |-
+          ExperimentName string 实验名称
+          实验的名称信息
+        example: 实验名称
+        type: string
+      resultValue:
+        description: |-
+          ResultValue string 实验条件
+          步骤对应的实验结果
+        example: 步骤结果值
+        type: string
+      stepName:
+        description: |-
+          StepName string 步骤名称
+          描述实验步骤的名称
+        example: 步骤名称
+        type: string
+    type: object
   auth.ChangePasswordRequest:
     properties:
       confirmPassword:
@@ -531,100 +605,6 @@ definitions:
         example: 60
         type: number
     type: object
-  data.PredictionData:
-    properties:
-      resultValue:
-        description: |-
-          ResultValue string 实验条件
-          步骤对应的实验结果
-        example: 步骤结果值
-        type: string
-      stepName:
-        description: |-
-          StepName string 步骤名称
-          描述实验步骤的名称
-        example: 步骤名称
-        type: string
-    type: object
-  data.PredictionDemoRequest:
-    properties:
-      experimentCondition:
-        description: |-
-          ExperimentCondition string 实验条件
-          步骤对应的实验条件描述
-        example: 实验条件
-        type: string
-      materialGroups:
-        description: |-
-          MaterialGroups []MaterialGroupData 材料组
-          该步骤中涉及的材料组信息
-        items:
-          $ref: '#/definitions/data.MaterialGroupData'
-        type: array
-      stepName:
-        description: |-
-          StepName string 步骤名称
-          描述实验步骤的名称
-        example: 步骤名称
-        type: string
-    type: object
-  data.PredictionDemoResponse:
-    properties:
-      resultValue:
-        description: |-
-          ResultValue string 实验条件
-          步骤对应的实验结果
-        example: 步骤结果值
-        type: string
-      stepName:
-        description: |-
-          StepName string 步骤名称
-          描述实验步骤的名称
-        example: 步骤名称
-        type: string
-    type: object
-  data.PredictionRequest:
-    properties:
-      steps:
-        description: |-
-          Steps []PredictionStepData 实验步骤
-          包含该实验的步骤信息
-        items:
-          $ref: '#/definitions/data.PredictionStepData'
-        type: array
-    type: object
-  data.PredictionResponse:
-    properties:
-      list:
-        description: |-
-          List []PredictionData 数据
-          返回的实验记录结果
-        items:
-          $ref: '#/definitions/data.PredictionData'
-        type: array
-    type: object
-  data.PredictionStepData:
-    properties:
-      experimentCondition:
-        description: |-
-          ExperimentCondition string 实验条件
-          步骤对应的实验条件描述
-        example: 实验条件
-        type: string
-      materialGroups:
-        description: |-
-          MaterialGroups []MaterialGroupData 材料组
-          该步骤中涉及的材料组信息
-        items:
-          $ref: '#/definitions/data.MaterialGroupData'
-        type: array
-      stepName:
-        description: |-
-          StepName string 步骤名称
-          描述实验步骤的名称
-        example: 步骤名称
-        type: string
-    type: object
   data.RecipeAddRequest:
     properties:
       materialGroups:
@@ -660,6 +640,18 @@ definitions:
           格式为时间戳，创建时间
         example: "2024-11-18T10:00:00Z"
         type: string
+      errMsg:
+        description: |-
+          ErrMsg string 错误信息
+          当 isErr 为 true 时，该字段包含具体的错误描述信息
+        example: The proportion of the material group is not 100%
+        type: string
+      isErr:
+        description: |-
+          IsErr bool 是否发生错误
+          表示该配方数据处理过程中是否出现错误，true 表示有错误，false 表示无错误
+        example: false
+        type: boolean
       materialGroups:
         description: |-
           MaterialGroups []MaterialGroupInfo 材料组
@@ -679,6 +671,69 @@ definitions:
           配方名称信息
         example: 配方名称
         type: string
+      recipeUsedInExperimentNum:
+        description: |-
+          RecipeUsedInExperimentNum int64
+          配方被实验使用数
+        example: 11
+        type: integer
+      sort:
+        description: |-
+          Sort int
+          排序 优先级从大到小
+        example: 1
+        type: integer
+    type: object
+  data.RecipeDeleteRequest:
+    properties:
+      recipeId:
+        description: |-
+          RecipeId 是配方的唯一标识符
+          必填字段，格式为 UUID v4
+          示例值: "123e4567-e89b-12d3-a456-426614174000"
+        example: 配方id
+        type: string
+    required:
+    - recipeId
+    type: object
+  data.RecipeEditRequest:
+    properties:
+      materialGroups:
+        description: |-
+          MaterialGroupData []MaterialGroupData 材料组列表
+          选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)
+          示例值: [{"materialGroupName": "材料组名称", "proportion": 25.5, "materials": []}]
+        items:
+          $ref: '#/definitions/data.MaterialGroupInfo'
+        type: array
+      recipeId:
+        description: |-
+          RecipeId 是配方的唯一标识符
+          必填字段，格式为 UUID v4
+          示例值: "123e4567-e89b-12d3-a456-426614174000"
+        example: 配方id
+        type: string
+      recipeName:
+        description: |-
+          RecipeName string 配方名称，选填，长度限制：2-255字符
+          用于按名称模糊查询实验记录
+        example: 配方名称
+        maxLength: 255
+        minLength: 2
+        type: string
+      sort:
+        description: |-
+          Sort int 排序 优先级从大到小
+          选填，必须是大于等于 0 的整数
+          示例值: 1
+        example: 1
+        minimum: 0
+        type: integer
+    required:
+    - materialGroups
+    - recipeId
+    - recipeName
+    - sort
     type: object
   data.RecipeFormListRequest:
     properties:
@@ -841,6 +896,36 @@ definitions:
 info:
   contact: {}
 paths:
+  /ai/predict/forwardDirection:
+    post:
+      consumes:
+      - application/json
+      description: 提供配方信息并进行预测，返回实验结果的预测值
+      parameters:
+      - description: 配方预测请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ai.ForwardDirectionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 预测成功，返回预测的实验结果
+          schema:
+            $ref: '#/definitions/ai.ForwardDirectionResponse'
+        "400":
+          description: 请求参数错误，可能是配方信息不完整或格式不正确
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 服务器内部错误，可能是预测服务异常
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 根据配方信息预测实验结果
+      tags:
+      - 模型预测
   /changPassword:
     put:
       consumes:
@@ -1021,67 +1106,36 @@ paths:
       summary: 导入文件
       tags:
       - 实验管理
-  /data/inference/prediction:
-    post:
-      consumes:
-      - application/json
-      description: 通过提供的配方信息，预测实验结果
-      parameters:
-      - description: 配方推荐请求参数
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/data.PredictionRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 推荐成功，返回推荐的材料列表
-          schema:
-            $ref: '#/definitions/data.PredictionResponse'
-        "400":
-          description: 请求参数错误，可能是配方信息不完整或格式不正确
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "500":
-          description: 服务器内部错误，可能是预测服务异常
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: 根据配方预测实验结果
-      tags:
-      - 模型预测
-  /data/inference/prediction/demo:
-    post:
-      consumes:
-      - application/json
-      description: 演示版本的配方推荐功能，提供简单的预测功能
-      parameters:
-      - description: 配方推荐演示请求参数
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/data.PredictionDemoRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 演示推荐成功，返回推荐的材料示例
-          schema:
-            $ref: '#/definitions/data.PredictionDemoResponse'
-        "400":
-          description: 请求参数错误，可能是配方信息不完整或格式不正确
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "500":
-          description: 服务器内部错误，可能是演示服务异常
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: 根据配方预测实验结果（Demo）
-      tags:
-      - 模型预测
   /data/recipe:
+    delete:
+      consumes:
+      - application/json
+      description: 根据配方ID删除指定的配方记录
+      parameters:
+      - description: 请求参数，包含需要删除的配方ID
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/data.RecipeDeleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功删除配方信息
+          schema:
+            $ref: '#/definitions/dto.Empty'
+        "400":
+          description: 请求参数错误，可能是配方ID无效
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 服务器内部错误，可能是数据库删除失败等情况
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 删除配方
+      tags:
+      - 配方管理
     get:
       consumes:
       - application/json
@@ -1138,6 +1192,35 @@ paths:
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: 添加新的配方
+      tags:
+      - 配方管理
+    put:
+      consumes:
+      - application/json
+      description: 根据提供的配方信息更新现有配方记录，更新时确保材料组和材料百分比的比例和为100%
+      parameters:
+      - description: 请求参数，包含更新的配方信息
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/data.RecipeEditRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功更新配方信息
+          schema:
+            $ref: '#/definitions/dto.Empty'
+        "400":
+          description: 请求参数错误，如缺少必要字段或格式不正确
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: 服务器内部错误，可能是数据库更新失败等情况
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: 编辑现有配方
       tags:
       - 配方管理
   /data/recipe/form/list:

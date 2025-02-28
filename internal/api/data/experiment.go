@@ -34,20 +34,20 @@ func (api *ExperimentApi) Import(ctx *gin.Context, req *dto.Empty) (res *dto.Emp
 	userId, exists := ctx.Get("userId")
 	if !exists {
 		logger.Logger.Errorf("[Import] User id does not exist")
-		return nil, utils.NewBusinessError(utils.UserNotFoundCode)
+		return nil, utils.NewBusinessError(utils.UserNotFoundCode, "")
 	}
 
 	// 获取文件
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		logger.Logger.Errorf("[Import] ctx.FormFile Error: %v", err)
-		return nil, utils.NewBusinessError(utils.FileParsingFailedCode)
+		return nil, utils.NewBusinessError(utils.FileParsingFailedCode, "")
 	}
 
 	// 文件不能超出10m
 	if file.Size > 10*1024*1024 {
 		logger.Logger.Warnf("File size exceeds 10 MB: %d bytes", file.Size)
-		return nil, utils.NewBusinessError(utils.FileTooLargeCode)
+		return nil, utils.NewBusinessError(utils.FileTooLargeCode, "")
 	}
 
 	res, err = api.service.Import(ctx, userId.(string), file)
@@ -55,7 +55,7 @@ func (api *ExperimentApi) Import(ctx *gin.Context, req *dto.Empty) (res *dto.Emp
 		if businessErr, ok := err.(*utils.BusinessError); ok {
 			return nil, businessErr
 		}
-		return nil, utils.NewBusinessError(utils.InternalError)
+		return nil, utils.NewBusinessError(utils.InternalError, "")
 	}
 
 	return
@@ -79,7 +79,7 @@ func (api *ExperimentApi) List(ctx *gin.Context, req *data.ExperimentListRequest
 		if businessErr, ok := err.(*utils.BusinessError); ok {
 			return nil, businessErr
 		}
-		return nil, utils.NewBusinessError(utils.InternalError)
+		return nil, utils.NewBusinessError(utils.InternalError, "")
 	}
 	return
 }
@@ -101,7 +101,7 @@ func (api *ExperimentApi) Delete(ctx *gin.Context, req *data.ExperimentDeleteReq
 		if businessErr, ok := err.(*utils.BusinessError); ok {
 			return nil, businessErr
 		}
-		return nil, utils.NewBusinessError(utils.InternalError)
+		return nil, utils.NewBusinessError(utils.InternalError, "")
 	}
 	return
 }
@@ -121,7 +121,7 @@ func (api *ExperimentApi) Add(ctx *gin.Context, req *data.ExperimentAddRequest) 
 	userId, exists := ctx.Get("userId")
 	if !exists {
 		logger.Logger.Errorf("[Import] User id does not exist")
-		return nil, utils.NewBusinessError(utils.UserNotFoundCode)
+		return nil, utils.NewBusinessError(utils.UserNotFoundCode, "")
 	}
 
 	// 调用服务层的 Add 方法进行实验数据插入
@@ -130,7 +130,7 @@ func (api *ExperimentApi) Add(ctx *gin.Context, req *data.ExperimentAddRequest) 
 		if businessErr, ok := err.(*utils.BusinessError); ok {
 			return nil, businessErr
 		}
-		return nil, utils.NewBusinessError(utils.InternalError)
+		return nil, utils.NewBusinessError(utils.InternalError, "")
 	}
 
 	return res, err
@@ -153,7 +153,7 @@ func (api *ExperimentApi) Edit(ctx *gin.Context, req *data.ExperimentUpdateReque
 		if businessErr, ok := err.(*utils.BusinessError); ok {
 			return nil, businessErr
 		}
-		return nil, utils.NewBusinessError(utils.InternalError)
+		return nil, utils.NewBusinessError(utils.InternalError, "")
 	}
 
 	return

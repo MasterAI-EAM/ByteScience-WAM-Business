@@ -53,18 +53,18 @@ func (ed *RecipeDao) GetMaterialByIdList(ctx context.Context, recipeIdList []str
 		Where(entity.RecipesColumns.ID+" IN ?", recipeIdList).
 		Pluck(entity.RecipesColumns.ID, &recipeInIdList).Error; err != nil {
 		logger.Logger.Errorf("[dao.GetMaterialByIdList] get recipeInIdList Mysql err: %v", err)
-		return nil, nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	if len(recipeInIdList) != len(recipeIdList) {
-		return nil, nil, utils.NewBusinessError(utils.RecipeDoesNotExistCode)
+		return nil, nil, utils.NewBusinessError(utils.RecipeDoesNotExistCode, "")
 	}
 
 	recipeMaterialGroups := make([]entity.RecipeMaterialGroups, 0)
 	if err := db.Client.WithContext(ctx).Where(entity.RecipeMaterialGroupsColumns.RecipeID+" IN ?",
 		recipeIdList).Find(&recipeMaterialGroups).Error; err != nil {
 		logger.Logger.Errorf("[dao.GetMaterialByIdList] get recipeMaterialGroups Mysql err: %v", err)
-		return nil, nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	experimentMaterialGroupIdList := make([]string, 0)
@@ -76,7 +76,7 @@ func (ed *RecipeDao) GetMaterialByIdList(ctx context.Context, recipeIdList []str
 	if err := db.Client.WithContext(ctx).Where(entity.MaterialsColumns.ExperimentMaterialGroupID+" IN ?",
 		experimentMaterialGroupIdList).Find(&materials).Error; err != nil {
 		logger.Logger.Errorf("[dao.GetMaterialByIdList] get materials Mysql err: %v", err)
-		return nil, nil, utils.NewBusinessError(utils.DatabaseErrorCode)
+		return nil, nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
 	}
 
 	return recipeMaterialGroups, materials, nil
@@ -93,12 +93,56 @@ func (ed *RecipeDao) GetRecipeInSignatureMap(ctx context.Context,
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
+	if err != nil {
+		logger.Logger.Errorf("[dao.GetDataByRecipeSignature] get Recipes Mysql err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
+	}
 
 	for _, row := range recipeList {
 		recipeMap[row.RecipeSignature] = row.ID
 	}
 
 	return recipeMap, err
+}
+
+// GetDataByRecipeSignature 获取已存在的签名的实验结果
+func (ed *RecipeDao) GetDataByRecipeSignature(ctx context.Context,
+	recipeSignature, stepName, experimentCondition string) ([]entity.ExperimentSteps, error) {
+	var recipeList []entity.Recipes
+	err := db.Client.WithContext(ctx).Model(&entity.Recipes{}).
+		Where(entity.RecipesColumns.RecipeSignature+" = ?", recipeSignature).
+		Find(&recipeList).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		logger.Logger.Errorf("[dao.GetDataByRecipeSignature] get Recipes Mysql err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
+	}
+
+	if len(recipeList) == 0 {
+		return nil, err
+	}
+
+	var experimentStepList []entity.ExperimentSteps
+	err = db.Client.WithContext(ctx).Model(&entity.ExperimentSteps{}).
+		Where(entity.ExperimentStepsColumns.RecipeID+" = ?", recipeList[0].ID).
+		Where(entity.ExperimentStepsColumns.StepName+" = ?", stepName).
+		Where(entity.ExperimentStepsColumns.ExperimentCondition+" = ?", experimentCondition).
+		Find(&experimentStepList).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		logger.Logger.Errorf("[dao.GetDataByRecipeSignature] get ExperimentSteps Mysql err: %v", err)
+		return nil, utils.NewBusinessError(utils.DatabaseErrorCode, "")
+	}
+
+	if len(experimentStepList) == 0 {
+		return nil, err
+	}
+
+	return experimentStepList, err
 }
 
 // Update 更新配方信息

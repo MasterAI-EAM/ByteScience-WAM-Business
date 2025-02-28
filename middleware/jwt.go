@@ -34,7 +34,7 @@ func JWTAuth(secretKey string) gin.HandlerFunc {
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			// 检查 token 是否使用了 HS256 签名方法
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, utils.NewBusinessError(utils.InvalidTokenCode)
+				return nil, utils.NewBusinessError(utils.InvalidTokenCode, "")
 			}
 			return []byte(secretKey), nil
 		})
