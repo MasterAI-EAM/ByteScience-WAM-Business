@@ -1,5 +1,6 @@
 # ByteScience-WAM-Business
 
+
 ## 项目背景
 `ByteScience-WAM-Business` 是一个用于支持业务系统管理的服务，旨在提供全面的业务功能。该项目采用 Go 语言开发，并与其他服务协作，构建了高效的服务体系。其技术栈主要依赖 MySQL 和 Redis 数据库。
 ## 安装依赖
@@ -16,8 +17,29 @@
 确保你已经安装并配置了 MySQL 和 Redis。如果没有安装，可以参考以下链接进行安装：
 - [MySQL 安装教程](https://dev.mysql.com/doc/refman/8.0/en/installing.html)
 - [Redis 安装教程](https://redis.io/docs/getting-started/)
-或者使用docker
-- 执行 ```docker-compose up -d```
+
+### 使用 Docker 部署
+你也可以通过 Docker 来快速部署 **MySQL** 和 **Redis**：
+
+1. **启动 Docker 服务**:
+- 执行以下命令来启动容器：
+```
+docker-compose up -d
+```
+
+2. 设置 MySQL 远程连接权限
+- 进入 MySQL 容器
+```
+docker exec -it <容器 ID> bash
+```
+- 连接到mysql
+```
+mysql -u root -p
+```
+- 设置远程连接权限
+```
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '123456' WITH GRANT OPTION; FLUSH PRIVILEGES;
+```
 
 ## 服务启动
 * 安装依赖
