@@ -1,3 +1,13 @@
 .idea/
 .vscode
 *.exe
+.env
+
+# Docker data volumes
+docker-data/
+
+# Database files
+*.db
+
+# MySQL data directories
+mysql/

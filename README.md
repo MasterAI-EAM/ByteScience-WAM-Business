@@ -36,6 +36,11 @@ docker exec -it <容器 ID> bash
 ```
 mysql -u root -p
 ```
+- 确保数据库已创建并导入初始数据
+```
+SHOW DATABASES;
+source /docker-entrypoint-initdb.d/init.sql
+```
 - 设置远程连接权限
 ```
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '123456' WITH GRANT OPTION; FLUSH PRIVILEGES;
