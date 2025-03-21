@@ -118,9 +118,10 @@ func (ss *ExperimentService) Delete(ctx context.Context, userId string, req *dat
 	}
 
 	if err = db.Client.Transaction(func(tx *gorm.DB) error {
-		materialGroupIdList := make([]string, 0)
-		if err = tx.WithContext(ctx).Where(entity.MaterialGroupsColumns.ExperimentID+" = ?", req.ExperimentID).
-			Pluck(entity.MaterialGroupsColumns.ID, &materialGroupIdList).Error; err != nil {
+		var materialGroupIdList []string
+		if err = tx.WithContext(ctx).Model(&entity.MaterialGroups{}).Where(entity.MaterialGroupsColumns.ExperimentID,
+			req.ExperimentID).
+			Pluck(entity.MaterialGroupsColumns.ExperimentID, &materialGroupIdList).Error; err != nil {
 			logger.Logger.Errorf("[ExperimentService Delete] Get materialGroupIdList err: %v", err)
 			return err
 		}
