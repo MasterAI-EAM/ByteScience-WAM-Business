@@ -26,18 +26,18 @@ CREATE TABLE `users` (
 ******sql******/
 // Users 用户表
 type Users struct {
-	ID          string    `gorm:"primaryKey;column:id;type:varchar(36);not null" json:"id"`                                                                                      // 唯一标识
-	Username    string    `gorm:"uniqueIndex:username;column:username;type:varchar(128);not null" json:"username"`                                                               // 用户名
-	Nickname    string    `gorm:"column:nickname;type:varchar(128);default:null" json:"nickname"`                                                                                // 昵称
-	Password    string    `gorm:"column:password;type:varchar(64);not null" json:"password"`                                                                                     // 加密后的密码
-	Email       string    `gorm:"uniqueIndex:email_deleted_at;column:email;type:varchar(256);default:null" json:"email"`                                                         // 邮箱
-	Phone       string    `gorm:"uniqueIndex:phone_deleted_at;column:phone;type:varchar(32);default:null" json:"phone"`                                                          // 手机号码
-	Status      int8      `gorm:"column:status;type:tinyint;not null;default:1" json:"status"`                                                                                   // 状态(1: 启用, 0: 禁用)
-	Remark      string    `gorm:"column:remark;type:varchar(256);default:null" json:"remark"`                                                                                    // 备注
-	LastLoginAt time.Time `gorm:"column:last_login_at;type:datetime;default:null" json:"lastLoginAt"`                                                                            // 上次登录时间
-	CreatedAt   time.Time `gorm:"column:created_at;type:datetime;not null;default:CURRENT_TIMESTAMP" json:"createdAt"`                                                           // 创建时间
-	UpdatedAt   time.Time `gorm:"column:updated_at;type:datetime;not null;default:CURRENT_TIMESTAMP" json:"updatedAt"`                                                           // 更新时间
-	DeletedAt   time.Time `gorm:"uniqueIndex:username;uniqueIndex:email_deleted_at;uniqueIndex:phone_deleted_at;column:deleted_at;type:timestamp;default:null" json:"deletedAt"` // 软删除时间
+	ID          string     `gorm:"primaryKey;column:id;type:varchar(36);not null"`                                                                  // 唯一标识
+	Username    string     `gorm:"uniqueIndex:username;column:username;type:varchar(128);not null"`                                                 // 用户名
+	Nickname    *string    `gorm:"column:nickname;type:varchar(128)"`                                                                               // 昵称
+	Password    string     `gorm:"column:password;type:varchar(64);not null"`                                                                       // 加密后的密码
+	Email       *string    `gorm:"uniqueIndex:email_deleted_at;column:email;type:varchar(256)"`                                                     // 邮箱
+	Phone       *string    `gorm:"uniqueIndex:phone_deleted_at;column:phone;type:varchar(32)"`                                                      // 手机号码
+	Status      int8       `gorm:"column:status;type:tinyint;not null;default:1"`                                                                   // 状态(1: 启用, 0: 禁用)
+	Remark      *string    `gorm:"column:remark;type:varchar(256)"`                                                                                 // 备注
+	LastLoginAt *time.Time `gorm:"column:last_login_at;type:datetime"`                                                                              // 上次登录时间
+	CreatedAt   time.Time  `gorm:"column:created_at;type:datetime;not null;default:CURRENT_TIMESTAMP"`                                              // 创建时间
+	UpdatedAt   time.Time  `gorm:"column:updated_at;type:datetime;not null;default:CURRENT_TIMESTAMP"`                                              // 更新时间
+	DeletedAt   *time.Time `gorm:"uniqueIndex:username;uniqueIndex:email_deleted_at;uniqueIndex:phone_deleted_at;column:deleted_at;type:timestamp"` // 软删除时间
 }
 
 // TableName get sql table name.获取数据库表名

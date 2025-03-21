@@ -8,6 +8,7 @@ import (
 CREATE TABLE `experiment_files` (
   `id` varchar(36) NOT NULL COMMENT '文件id',
   `file_name` varchar(255) NOT NULL COMMENT '文件名称',
+  `file_path` varchar(512) NOT NULL COMMENT '文件保存路径',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   PRIMARY KEY (`id`)
@@ -17,6 +18,7 @@ CREATE TABLE `experiment_files` (
 type ExperimentFiles struct {
 	ID        string    `gorm:"primaryKey;column:id;type:varchar(36);not null" json:"id"`                            // 文件id
 	FileName  string    `gorm:"column:file_name;type:varchar(255);not null" json:"fileName"`                         // 文件名称
+	FilePath  string    `gorm:"column:file_path;type:varchar(512);not null" json:"filePath"`                         // 文件保存路径
 	CreatedAt time.Time `gorm:"column:created_at;type:datetime;not null;default:CURRENT_TIMESTAMP" json:"createdAt"` // 创建时间
 	UpdatedAt time.Time `gorm:"column:updated_at;type:datetime;not null;default:CURRENT_TIMESTAMP" json:"updatedAt"` // 修改时间
 }
@@ -30,11 +32,13 @@ func (m *ExperimentFiles) TableName() string {
 var ExperimentFilesColumns = struct {
 	ID        string
 	FileName  string
+	FilePath  string
 	CreatedAt string
 	UpdatedAt string
 }{
 	ID:        "id",
 	FileName:  "file_name",
+	FilePath:  "file_path",
 	CreatedAt: "created_at",
 	UpdatedAt: "updated_at",
 }

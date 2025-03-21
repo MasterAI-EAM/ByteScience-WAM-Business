@@ -4,14 +4,19 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"net/http"
 )
 
 // bindAndValidate 处理请求的参数绑定和校验
 func bindAndValidate[T any](ctx *gin.Context, method string) (*T, error) {
 	var req T
 	var err error
-
-	if ctx.Request.URL.Path == "/v1/data/experiment/import" { // 特殊接口不用json
+	specialPaths := map[string]string{
+		"/v1/data/experiment/import": http.MethodPost,
+		"/v1/data/task":              http.MethodPost,
+	}
+	// 判断当前请求是否匹配特殊接口
+	if httpMethod, exists := specialPaths[ctx.Request.URL.Path]; exists && httpMethod == ctx.Request.Method {
 		err = ctx.ShouldBind(&req)
 	} else {
 		err = ctx.ShouldBindJSON(&req)

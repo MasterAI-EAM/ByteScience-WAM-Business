@@ -1,8 +1,6 @@
 package entity
 
-import (
-	"time"
-)
+import "time"
 
 /******sql******
 CREATE TABLE `menus` (
@@ -21,14 +19,14 @@ CREATE TABLE `menus` (
 ******sql******/
 // Menus 菜单表
 type Menus struct {
-	ID        string    `gorm:"primaryKey;column:id;type:char(36);not null" json:"id"`                                    // 菜单ID
-	ParentID  string    `gorm:"index:parent_id;column:parent_id;type:char(36);default:null" json:"parentId"`              // 父菜单ID，指向上一级菜单
-	Name      string    `gorm:"column:name;type:varchar(128);not null" json:"name"`                                       // 菜单名称
-	Sort      int       `gorm:"column:sort;type:int;default:null;default:0" json:"sort"`                                  // 排序字段
-	Status    int8      `gorm:"column:status;type:tinyint;default:null;default:1" json:"status"`                          // 状态: 1=启用, 0=禁用
-	CreatedAt time.Time `gorm:"column:created_at;type:timestamp;default:null;default:CURRENT_TIMESTAMP" json:"createdAt"` // 创建时间
-	UpdatedAt time.Time `gorm:"column:updated_at;type:timestamp;default:null;default:CURRENT_TIMESTAMP" json:"updatedAt"` // 更新时间
-	DeletedAt time.Time `gorm:"column:deleted_at;type:timestamp;default:null" json:"deletedAt"`                           // 软删除时间
+	ID        string     `gorm:"primaryKey;column:id;type:char(36);not null"`                // 菜单ID
+	ParentID  *string    `gorm:"index:parent_id;column:parent_id;type:char(36)"`             // 父菜单ID，指向上一级菜单
+	Name      string     `gorm:"column:name;type:varchar(128);not null"`                     // 菜单名称
+	Sort      *int       `gorm:"column:sort;type:int;default:0"`                             // 排序字段
+	Status    *int8      `gorm:"column:status;type:tinyint;default:1"`                       // 状态: 1=启用, 0=禁用
+	CreatedAt *time.Time `gorm:"column:created_at;type:timestamp;default:CURRENT_TIMESTAMP"` // 创建时间
+	UpdatedAt *time.Time `gorm:"column:updated_at;type:timestamp;default:CURRENT_TIMESTAMP"` // 更新时间
+	DeletedAt *time.Time `gorm:"column:deleted_at;type:timestamp"`                           // 软删除时间
 }
 
 // TableName get sql table name.获取数据库表名

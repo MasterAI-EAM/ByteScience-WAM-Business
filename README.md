@@ -45,6 +45,11 @@ source /docker-entrypoint-initdb.d/init.sql
 ```
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '123456' WITH GRANT OPTION; FLUSH PRIVILEGES;
 ```
+- 设置时区
+```
+SET GLOBAL time_zone = '+08:00';
+SET SESSION time_zone = '+08:00';
+```
 
 ## 服务启动
 * 安装依赖

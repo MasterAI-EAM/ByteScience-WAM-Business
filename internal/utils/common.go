@@ -1,6 +1,10 @@
 package utils
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"regexp"
 	"time"
 )
@@ -65,9 +69,26 @@ func RemoveDuplicates[T comparable](arr []T) []T {
 	return result
 }
 
+// FormatTime 将time转换为字符串
 func FormatTime(t *time.Time) string {
 	if t == nil {
 		return ""
 	}
 	return t.Format("2006-01-02T15:04:05Z")
+}
+
+// ToJSON 将数据转换为 JSON 字符串
+func ToJSON(data interface{}) string {
+	b, err := json.Marshal(data)
+	if err != nil {
+		fmt.Println("Error marshalling data: ", err)
+	}
+	return string(b)
+}
+
+// Md5Hash 计算MD5哈希
+func Md5Hash(input string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(input))
+	return hex.EncodeToString(hasher.Sum(nil))
 }

@@ -1,35 +1,33 @@
 version: "3.8"
 
 services:
-  # Redis 服务
+  # ----------------- Redis 服务 -----------------
   redis:
-    image: redis:latest
-    container_name: wam-business-redis
+    image: redis:7.2.4
+    container_name: redis
     restart: always
     ports:
       - "6379:6379"
     networks:
       - wam-business
 
-  # mysql 数据库服务
+  # ----------------- MySQL 服务 -----------------
   mysql:
-    image: mysql:lts
-    container_name: wam-business-mysql
+    image: mysql:8.0.41
+    container_name: mysql
     restart: always
-    security_opt:
-      - seccomp:unconfined
-    command: mysqld --mysql-native-password=ON --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
     volumes:
       - ./mysql/data:/var/lib/mysql
       - ./mysql/config:/etc/mysql/conf.d
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - 3306:3306
+      - "3306:3306"
     environment:
       SET_CONTAINER_TIMEZONE: "true"
       CONTAINER_TIMEZONE: "Asia/Shanghai"
       MYSQL_ROOT_PASSWORD: "123456"
-      MYSQL_ROOT_HOST: "%"  # Allow connections from any host
+      MYSQL_ROOT_HOST: "%"
     networks:
       - wam-business
 

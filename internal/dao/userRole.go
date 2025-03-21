@@ -16,20 +16,6 @@ func NewUserRoleDao() *UserRoleDao {
 	return &UserRoleDao{}
 }
 
-// InsertBatchTx 在事务中批量插入用户角色关联
-func (urd *UserRoleDao) InsertBatchTx(ctx context.Context, tx *gorm.DB, userRoles []*entity.UserRoles) error {
-	return tx.WithContext(ctx).CreateInBatches(&userRoles, 300).Error
-}
-
-// Assign 给用户分配角色
-func (urd *UserRoleDao) Assign(ctx context.Context, userID, roleID string) error {
-	userRole := &entity.UserRoles{
-		UserID: userID,
-		RoleID: roleID,
-	}
-	return db.Client.WithContext(ctx).Create(userRole).Error
-}
-
 // GetRolesByUserID 根据用户ID获取角色列表
 func (urd *UserRoleDao) GetRolesByUserID(ctx context.Context, userID string) ([]*entity.Roles, error) {
 	var roles []*entity.Roles
@@ -40,27 +26,6 @@ func (urd *UserRoleDao) GetRolesByUserID(ctx context.Context, userID string) ([]
 		Where("roles.deleted_at" + " IS NULL").
 		Find(&roles).Error
 	return roles, err
-}
-
-// Remove 移除用户的角色
-func (urd *UserRoleDao) Remove(ctx context.Context, userID, roleID string) error {
-	return db.Client.WithContext(ctx).
-		Delete(&entity.UserRoles{}, "user_id = ? AND role_id = ?", userID, roleID).
-		Error
-}
-
-// RemoveByUserIDTx 在事务中根据用户ID移除所有关联角色
-func (urd *UserRoleDao) RemoveByUserIDTx(ctx context.Context, tx *gorm.DB, userID string) error {
-	return tx.WithContext(ctx).
-		Delete(&entity.UserRoles{}, "user_id = ?", userID).
-		Error
-}
-
-// RemoveByRoleIDTx 在事务中根据角色ID移除所有关联用户
-func (urd *UserRoleDao) RemoveByRoleIDTx(ctx context.Context, tx *gorm.DB, roleID string) error {
-	return tx.WithContext(ctx).
-		Delete(&entity.UserRoles{}, "role_id = ?", roleID).
-		Error
 }
 
 // GetUsersByRoleID 根据角色ID获取用户列表

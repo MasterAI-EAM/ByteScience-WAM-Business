@@ -1,8 +1,6 @@
 package entity
 
-import (
-	"time"
-)
+import "time"
 
 /******sql******
 CREATE TABLE `roles` (
@@ -19,13 +17,13 @@ CREATE TABLE `roles` (
 ******sql******/
 // Roles 角色表
 type Roles struct {
-	ID          string    `gorm:"primaryKey;column:id;type:char(36);not null" json:"id"`                                          // 角色ID
-	Name        string    `gorm:"uniqueIndex:unique_name_deleted;column:name;type:varchar(128);not null" json:"name"`             // 角色名称
-	Description string    `gorm:"column:description;type:varchar(255);default:null" json:"description"`                           // 角色描述
-	Status      int8      `gorm:"column:status;type:tinyint;default:null;default:1" json:"status"`                                // 状态: 1=启用, 0=禁用
-	CreatedAt   time.Time `gorm:"column:created_at;type:timestamp;default:null;default:CURRENT_TIMESTAMP" json:"createdAt"`       // 创建时间
-	UpdatedAt   time.Time `gorm:"column:updated_at;type:timestamp;default:null;default:CURRENT_TIMESTAMP" json:"updatedAt"`       // 更新时间
-	DeletedAt   time.Time `gorm:"uniqueIndex:unique_name_deleted;column:deleted_at;type:timestamp;default:null" json:"deletedAt"` // 软删除时间
+	ID          string     `gorm:"primaryKey;column:id;type:char(36);not null"`                            // 角色ID
+	Name        string     `gorm:"uniqueIndex:unique_name_deleted;column:name;type:varchar(128);not null"` // 角色名称
+	Description *string    `gorm:"column:description;type:varchar(255)"`                                   // 角色描述
+	Status      *int8      `gorm:"column:status;type:tinyint;default:1"`                                   // 状态: 1=启用, 0=禁用
+	CreatedAt   *time.Time `gorm:"column:created_at;type:timestamp;default:CURRENT_TIMESTAMP"`             // 创建时间
+	UpdatedAt   *time.Time `gorm:"column:updated_at;type:timestamp;default:CURRENT_TIMESTAMP"`             // 更新时间
+	DeletedAt   *time.Time `gorm:"uniqueIndex:unique_name_deleted;column:deleted_at;type:timestamp"`       // 软删除时间
 }
 
 // TableName get sql table name.获取数据库表名

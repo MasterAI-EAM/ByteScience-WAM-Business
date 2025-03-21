@@ -12,8 +12,8 @@ CREATE TABLE `role_paths` (
 ******sql******/
 // RolePaths 角色接口中间表
 type RolePaths struct {
-	RoleID string `gorm:"primaryKey;column:role_id;type:char(36);not null" json:"roleId"`               // 角色ID
-	PathID string `gorm:"primaryKey;index:path_id;column:path_id;type:char(36);not null" json:"pathId"` // 路径ID
+	RoleID string `gorm:"primaryKey;column:role_id;type:char(36);not null"`               // 角色ID
+	PathID string `gorm:"primaryKey;index:path_id;column:path_id;type:char(36);not null"` // 路径ID
 }
 
 // TableName get sql table name.获取数据库表名

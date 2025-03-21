@@ -4,7 +4,6 @@ import (
 	"ByteScience-WAM-Business/internal/model/entity"
 	"ByteScience-WAM-Business/pkg/db"
 	"context"
-	"gorm.io/gorm"
 )
 
 // RolePathDao 角色路径数据访问对象
@@ -13,20 +12,6 @@ type RolePathDao struct{}
 // NewRolePathDao 创建 RolePathDao 实例
 func NewRolePathDao() *RolePathDao {
 	return &RolePathDao{}
-}
-
-// InsertBatchTx 在事务中批量插入角色路径关系
-func (rpd *RolePathDao) InsertBatchTx(ctx context.Context, tx *gorm.DB, rolePaths []*entity.RolePaths) error {
-	return tx.WithContext(ctx).CreateInBatches(&rolePaths, 300).Error
-}
-
-// Assign 分配路径给角色
-func (rpd *RolePathDao) Assign(ctx context.Context, roleID, pathID string) error {
-	rolePath := &entity.RolePaths{
-		RoleID: roleID,
-		PathID: pathID,
-	}
-	return db.Client.WithContext(ctx).Create(rolePath).Error
 }
 
 // GetByRoleID 根据角色ID获取路径列表
@@ -39,27 +24,6 @@ func (rpd *RolePathDao) GetByRoleID(ctx context.Context, roleID string) ([]*enti
 		Where(entity.PathsColumns.DeletedAt + " IS NULL").
 		Find(&paths).Error
 	return paths, err
-}
-
-// Remove 移除角色的路径
-func (rpd *RolePathDao) Remove(ctx context.Context, roleID, pathID string) error {
-	return db.Client.WithContext(ctx).
-		Delete(&entity.RolePaths{}, "role_id = ? AND path_id = ?", roleID, pathID).
-		Error
-}
-
-// RemoveTx 在事务中移除角色的路径
-func (rpd *RolePathDao) RemoveTx(ctx context.Context, tx *gorm.DB, roleID, pathID string) error {
-	return tx.WithContext(ctx).
-		Delete(&entity.RolePaths{}, "role_id = ? AND path_id = ?", roleID, pathID).
-		Error
-}
-
-// RemoveByRoleIDTx 在事务中根据角色id移除角色的路径
-func (rpd *RolePathDao) RemoveByRoleIDTx(ctx context.Context, tx *gorm.DB, roleID string) error {
-	return tx.WithContext(ctx).
-		Delete(&entity.RolePaths{}, "role_id = ?", roleID).
-		Error
 }
 
 // GetByPathID 根据路径ID获取拥有该路径的角色列表

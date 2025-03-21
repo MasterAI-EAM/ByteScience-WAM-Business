@@ -1,12 +1,10 @@
 package dao
 
 import (
+	"ByteScience-WAM-Business/internal/model/entity"
 	"ByteScience-WAM-Business/pkg/db"
 	"context"
 	"errors"
-	"time"
-
-	"ByteScience-WAM-Business/internal/model/entity"
 	"gorm.io/gorm"
 )
 
@@ -16,11 +14,6 @@ type MenuDao struct{}
 // NewMenuDao 创建 MenuDao 实例
 func NewMenuDao() *MenuDao {
 	return &MenuDao{}
-}
-
-// Insert 插入菜单记录
-func (md *MenuDao) Insert(ctx context.Context, menu *entity.Menus) error {
-	return db.Client.WithContext(ctx).Create(menu).Error
 }
 
 // GetByID 根据 ID 获取菜单
@@ -45,24 +38,6 @@ func (md *MenuDao) GetByParentID(ctx context.Context, parentID string) ([]*entit
 		Order(entity.MenusColumns.Sort + " ASC").
 		Find(&menus).Error
 	return menus, err
-}
-
-// Update 更新菜单信息
-func (md *MenuDao) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Menus{}).
-		Where(entity.MenusColumns.ID+" = ?", id).
-		Updates(updates).
-		Error
-}
-
-// SoftDeleteByID 软删除菜单记录
-func (md *MenuDao) SoftDeleteByID(ctx context.Context, id string) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Menus{}).
-		Where(entity.MenusColumns.ID+" = ?", id).
-		Update(entity.MenusColumns.DeletedAt, time.Now()).
-		Error
 }
 
 // Query 分页查询菜单
@@ -95,15 +70,6 @@ func (md *MenuDao) Query(ctx context.Context, page int, pageSize int, filters ma
 	}
 
 	return menus, total, nil
-}
-
-// UpdateStatus 更新菜单状态
-func (md *MenuDao) UpdateStatus(ctx context.Context, id string, status int) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Menus{}).
-		Where(entity.MenusColumns.ID+" = ?", id).
-		Update(entity.MenusColumns.Status, status).
-		Error
 }
 
 // GetAll 获取所有菜单

@@ -158,94 +158,6 @@ const docTemplate = `{
                     }
                 }
             },
-            "put": {
-                "description": "根据实验ID修改实验的具体信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "实验管理"
-                ],
-                "summary": "修改实验信息",
-                "parameters": [
-                    {
-                        "description": "请求参数，包含实验ID及要修改的具体内容",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/data.ExperimentUpdateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功修改实验信息",
-                        "schema": {
-                            "$ref": "#/definitions/dto.Empty"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误，如实验ID不存在或修改内容无效",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误，可能是数据库更新失败等情况",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "根据提供的实验信息创建新的实验记录",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "实验管理"
-                ],
-                "summary": "添加新的实验信息",
-                "parameters": [
-                    {
-                        "description": "请求参数，包含新的实验信息",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/data.ExperimentAddRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功添加实验信息",
-                        "schema": {
-                            "$ref": "#/definitions/dto.Empty"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误，如缺少必要字段或格式不正确",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误，可能是数据库插入失败等情况",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
             "delete": {
                 "description": "根据实验ID删除实验",
                 "consumes": [
@@ -291,11 +203,11 @@ const docTemplate = `{
                 }
             }
         },
-        "/data/experiment/import": {
-            "post": {
-                "description": "接收上传的文件并处理，根据业务需求进行相关文件解析和导入",
+        "/data/experiment/info": {
+            "get": {
+                "description": "根据实验ID获取实验的详细信息",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -303,19 +215,109 @@ const docTemplate = `{
                 "tags": [
                     "实验管理"
                 ],
-                "summary": "导入文件",
+                "summary": "获取指定实验的详情信息",
+                "parameters": [
+                    {
+                        "description": "请求参数，包含实验ID",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.ExperimentInfoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功返回实验详情",
+                        "schema": {
+                            "$ref": "#/definitions/data.ExperimentInfoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，如实验ID不存在或格式无效",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是查询失败等情况",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/data/task": {
+            "get": {
+                "description": "支持分页查询任务列表，可按任务名称筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "任务管理"
+                ],
+                "summary": "获取任务列表",
+                "parameters": [
+                    {
+                        "description": "分页参数及筛选条件",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.TaskListRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功返回任务列表",
+                        "schema": {
+                            "$ref": "#/definitions/data.TaskListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误，如分页参数错误、筛选条件不符合要求",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误，可能是数据库查询失败",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "接收并存储上传的任务文件，支持多文件上传，限制最大 100MB/文件，最多 20 个文件",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "任务管理"
+                ],
+                "summary": "上传任务文件",
                 "parameters": [
                     {
                         "type": "file",
-                        "description": "上传的文件",
-                        "name": "file",
+                        "description": "上传的文件，支持多个",
+                        "name": "files",
                         "in": "formData",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "文件导入成功，返回空对象表示操作成功",
+                        "description": "文件上传成功",
                         "schema": {
                             "$ref": "#/definitions/dto.Empty"
                         }
@@ -327,277 +329,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "服务器内部错误，可能是文件解析或存储过程中出现异常",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/data/recipe": {
-            "get": {
-                "description": "根据分页请求获取配方列表，支持按配方名称进行筛选",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "配方管理"
-                ],
-                "summary": "获取配方列表",
-                "parameters": [
-                    {
-                        "description": "请求参数，包含分页信息及筛选条件",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/data.RecipeListRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功获取配方列表，返回配方数据",
-                        "schema": {
-                            "$ref": "#/definitions/data.RecipeListResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误，如分页参数错误、筛选条件不符合要求",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误，可能是数据库查询失败等情况",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "根据提供的配方信息更新现有配方记录，更新时确保材料组和材料百分比的比例和为100%",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "配方管理"
-                ],
-                "summary": "编辑现有配方",
-                "parameters": [
-                    {
-                        "description": "请求参数，包含更新的配方信息",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/data.RecipeEditRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功更新配方信息",
-                        "schema": {
-                            "$ref": "#/definitions/dto.Empty"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误，如缺少必要字段或格式不正确",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误，可能是数据库更新失败等情况",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "根据提供的配方信息创建新的配方记录",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "配方管理"
-                ],
-                "summary": "添加新的配方",
-                "parameters": [
-                    {
-                        "description": "请求参数，包含新的配方信息",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/data.RecipeAddRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功添加配方信息",
-                        "schema": {
-                            "$ref": "#/definitions/dto.Empty"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误，如缺少必要字段或格式不正确",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误，可能是数据库插入失败等情况",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "根据配方ID删除指定的配方记录",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "配方管理"
-                ],
-                "summary": "删除配方",
-                "parameters": [
-                    {
-                        "description": "请求参数，包含需要删除的配方ID",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/data.RecipeDeleteRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功删除配方信息",
-                        "schema": {
-                            "$ref": "#/definitions/dto.Empty"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误，可能是配方ID无效",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误，可能是数据库删除失败等情况",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/data/recipe/form/list": {
-            "get": {
-                "description": "根据分页请求获取配方表单列表，支持按配方名称进行筛选",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "配方管理"
-                ],
-                "summary": "获取配方表单列表",
-                "parameters": [
-                    {
-                        "description": "请求参数，包含分页信息及筛选条件",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/data.RecipeFormListRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功获取配方表单列表，返回配方数据",
-                        "schema": {
-                            "$ref": "#/definitions/data.RecipeFormListResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误，如分页参数错误、筛选条件不符合要求",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误，可能是数据库查询失败等情况",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/data/recipe/info": {
-            "get": {
-                "description": "根据传入的配方 ID 获取该配方的详细信息，包括材料组、材料信息以及基于此配方创建的实验信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "配方管理"
-                ],
-                "summary": "获取单个配方详情",
-                "parameters": [
-                    {
-                        "description": "请求参数，包含要查询的配方 ID",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/data.RecipeInfoRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功获取单个配方详情，返回配方详细数据",
-                        "schema": {
-                            "$ref": "#/definitions/data.RecipeInfoResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误，如配方 ID 格式错误等",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误，可能是数据库查询失败等情况",
+                        "description": "服务器内部错误，可能是文件解析或存储失败",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -665,7 +397,7 @@ const docTemplate = `{
                     "description": "MaterialGroups []MaterialGroupData 材料组\n该步骤中涉及的材料组信息",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/data.MaterialGroupData"
+                        "$ref": "#/definitions/ai.MaterialGroupData"
                     }
                 },
                 "stepName": {
@@ -727,6 +459,43 @@ const docTemplate = `{
                     "description": "StepName string 步骤名称\n描述实验步骤的名称",
                     "type": "string",
                     "example": "步骤名称"
+                }
+            }
+        },
+        "ai.MaterialData": {
+            "type": "object",
+            "properties": {
+                "materialName": {
+                    "description": "MaterialName string 材料名称\n材料的名称信息",
+                    "type": "string",
+                    "example": "材料名称"
+                },
+                "proportion": {
+                    "description": "Proportion float64 材料占比\n材料在材料组中的占比，百分比形式",
+                    "type": "number",
+                    "example": 25.5
+                }
+            }
+        },
+        "ai.MaterialGroupData": {
+            "type": "object",
+            "properties": {
+                "materialGroupName": {
+                    "description": "MaterialGroupName string 材料组名称\n材料组的名称信息",
+                    "type": "string",
+                    "example": "材料组名称"
+                },
+                "materials": {
+                    "description": "Materials []MaterialData 材料列表\n材料组内的具体材料信息",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ai.MaterialData"
+                    }
+                },
+                "proportion": {
+                    "description": "Proportion float64 材料组占比\n材料组在实验步骤中的占比，百分比形式",
+                    "type": "number",
+                    "example": 25.5
                 }
             }
         },
@@ -800,65 +569,23 @@ const docTemplate = `{
                 }
             }
         },
-        "data.ExperimentAddRequest": {
-            "type": "object",
-            "properties": {
-                "endTime": {
-                    "description": "EndTime string 实验结束时间\n选填，格式为 \"2006-01-02T15:04:05Z\"（RFC3339 格式）\n示例值: \"2024-02-05T18:00:00Z\"",
-                    "type": "string",
-                    "example": "2024-02-05T18:00:00Z"
-                },
-                "experimentName": {
-                    "description": "ExperimentName string 实验名称\n实验的名称，选填；如果填写，名称长度限制为 2-128 字符\n支持中文、英文、数字及特殊字符\n示例值: \"实验名称\"",
-                    "type": "string",
-                    "maxLength": 128,
-                    "minLength": 2,
-                    "example": "实验名称"
-                },
-                "experimenter": {
-                    "description": "Experimenter string 实验者\n实验的负责人，选填；如果填写，名称长度限制为 1-128 字符\n示例值: \"张三\"",
-                    "type": "string",
-                    "maxLength": 128,
-                    "minLength": 1,
-                    "example": "张三"
-                },
-                "sort": {
-                    "description": "Sort int 排序 优先级从大到小\n选填，必须是大于等于 0 的整数\n示例值: 1",
-                    "type": "integer",
-                    "minimum": 0,
-                    "example": 1
-                },
-                "startTime": {
-                    "description": "StartTime string 实验开始时间\n选填，格式为 \"2006-01-02T15:04:05Z\"（RFC3339 格式）\n示例值: \"2024-02-05T08:30:00Z\"",
-                    "type": "string",
-                    "example": "2024-02-05T08:30:00Z"
-                },
-                "steps": {
-                    "description": "Steps []ExperimentStepAdd 实验步骤列表\n选填，包含该实验的所有步骤信息，每个步骤包含名称、描述、实验条件、结果值及材料组等\n示例值: [{\"stepName\": \"步骤名称\", \"stepNameDescription\": \"实验步骤描述\", \"experimentCondition\": \"实验条件\", \"resultValue\": \"步骤结果值\", \"materialGroups\": []}]",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.ExperimentStepAdd"
-                    }
-                }
-            }
-        },
         "data.ExperimentData": {
             "type": "object",
             "properties": {
                 "createdAt": {
                     "description": "CreatedAt 创建时间\n格式为时间戳，创建时间",
                     "type": "string",
-                    "example": "2024-11-18T10:00:00Z"
+                    "example": "2006-01-02 15:04:05"
                 },
                 "endTime": {
                     "description": "EndTime 实验结束时间\n格式为时间戳，实验结束时间",
                     "type": "string",
-                    "example": "2024-11-18T10:00:00Z"
+                    "example": "2006-01-02 15:04:05"
                 },
                 "entryCategory": {
-                    "description": "EntryCategory int8 录入类别\n1 表示文件导入，2 表示页面输入",
-                    "type": "integer",
-                    "example": 1
+                    "description": "EntryCategory string 录入类别\nfile_import=文件导入, manual_entry=页面录入",
+                    "type": "string",
+                    "example": "1"
                 },
                 "experimentId": {
                     "description": "ExperimentID string 实验ID\n唯一标识实验的UUID",
@@ -875,32 +602,25 @@ const docTemplate = `{
                     "type": "string",
                     "example": "张三"
                 },
-                "fileId": {
-                    "description": "FileID string 文件ID\n关联的文件资源ID",
-                    "type": "string",
-                    "example": "123e4567-e89b-12d3-a456-426614174001"
-                },
-                "fileName": {
-                    "description": "fileName string 文件名\n关联的文件资源ID",
-                    "type": "string",
-                    "example": "240628AI模型数据200组 含FRP性能-(对外）FD"
-                },
                 "startTime": {
                     "description": "StartTime 实验开始时间\n格式为时间戳，实验开始时间",
                     "type": "string",
-                    "example": "2024-11-18T10:00:00Z"
+                    "example": "2006-01-02 15:04:05"
                 },
-                "steps": {
-                    "description": "Steps []ExperimentStepData 实验步骤\n包含该实验的步骤信息",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.ExperimentStepData"
-                    }
+                "status": {
+                    "description": "Status 实验状态\n表示实验的审核状态，包含 'pending_review'、'approved'、'rejected'",
+                    "type": "string",
+                    "example": "pending_review"
                 },
                 "userId": {
                     "description": "UserID string 操作用户ID\n记录操作该实验的用户 ID",
                     "type": "string",
                     "example": "987e6543-d21b-34c5-a654-123456789abc"
+                },
+                "username": {
+                    "description": "Username 用户名\n表示实验相关的用户名",
+                    "type": "string",
+                    "example": "testuser"
                 }
             }
         },
@@ -914,22 +634,93 @@ const docTemplate = `{
                 }
             }
         },
-        "data.ExperimentInfo": {
+        "data.ExperimentInfoRequest": {
             "type": "object",
             "properties": {
-                "id": {
-                    "description": "Id 是实验的唯一标识符\n示例值: \"123e4567-e89b-12d3-a456-426614174000\"",
-                    "type": "string"
+                "experimentId": {
+                    "description": "ExperimentID string 实验ID\n唯一标识实验的UUID",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                }
+            }
+        },
+        "data.ExperimentInfoResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "description": "CreatedAt 创建时间\n格式为时间戳，创建时间",
+                    "type": "string",
+                    "example": "2006-01-02 15:04:05"
                 },
-                "name": {
-                    "description": "Name 是实验的名称\n示例值: \"实验名称\"",
-                    "type": "string"
+                "endTime": {
+                    "description": "EndTime 实验结束时间\n格式为时间戳，实验结束时间",
+                    "type": "string",
+                    "example": "2006-01-02 15:04:05"
+                },
+                "entryCategory": {
+                    "description": "EntryCategory string 录入类别\nfile_import=文件导入, manual_entry=页面录入",
+                    "type": "string",
+                    "example": "1"
+                },
+                "experimentId": {
+                    "description": "experimentId 实验编号，必填，UUID格式\n唯一标识要删除的实验，格式必须为UUID4",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "experimentName": {
+                    "description": "ExperimentName string 实验名称\n实验的名称信息",
+                    "type": "string",
+                    "example": "实验名称"
+                },
+                "experimenter": {
+                    "description": "Experimenter string 实验者\n进行实验的人员名称",
+                    "type": "string",
+                    "example": "张三"
+                },
+                "materialGroups": {
+                    "description": "MaterialGroups []MaterialGroupInfo 材料组\n该步骤中涉及的材料组信息",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.MaterialGroupInfo"
+                    }
+                },
+                "startTime": {
+                    "description": "StartTime 实验开始时间\n格式为时间戳，实验开始时间",
+                    "type": "string",
+                    "example": "2006-01-02 15:04:05"
+                },
+                "status": {
+                    "description": "Status 实验状态\n表示实验的审核状态，包含 'pending_review'、'approved'、'rejected'",
+                    "type": "string",
+                    "example": "pending_review"
+                },
+                "stepInfo": {
+                    "description": "StepInfo []ExperimentStepInfo 实验步骤数据\n该步骤中涉及的材料组信息",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.ExperimentStepInfo"
+                    }
+                },
+                "userId": {
+                    "description": "UserID string 操作用户ID\n记录操作该实验的用户 ID",
+                    "type": "string",
+                    "example": "987e6543-d21b-34c5-a654-123456789abc"
+                },
+                "username": {
+                    "description": "Username 用户名\n表示实验相关的用户名",
+                    "type": "string",
+                    "example": "testuser"
                 }
             }
         },
         "data.ExperimentListRequest": {
             "type": "object",
             "properties": {
+                "endTime": {
+                    "description": "EndTime string 结束时间\n创建时间，格式 2006-01-02 15:04:05",
+                    "type": "string",
+                    "example": "2006-01-02 15:04:05"
+                },
                 "experimentName": {
                     "description": "ExperimentName string 实验名称，选填，长度限制：2-128字符\n用于按名称模糊查询实验记录",
                     "type": "string",
@@ -957,6 +748,26 @@ const docTemplate = `{
                     "maximum": 10000,
                     "minimum": 1,
                     "example": 10
+                },
+                "startTime": {
+                    "description": "StartTime string 开始时间\n创建时间，格式 2006-01-02 15:04:05",
+                    "type": "string",
+                    "example": "2006-01-02 15:04:05"
+                },
+                "status": {
+                    "description": "Status string 审核状态\n当前任务的处理状态，pending_review=待审核, approved=审核通过, rejected=审核不通过",
+                    "type": "string",
+                    "enum": [
+                        "pending_review",
+                        "approved",
+                        "rejected"
+                    ],
+                    "example": "pending_review"
+                },
+                "taskId": {
+                    "description": "TaskId string 任务id\n唯一标识实验的UUID",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
                 }
             }
         },
@@ -977,67 +788,23 @@ const docTemplate = `{
                 }
             }
         },
-        "data.ExperimentStepAdd": {
+        "data.ExperimentStepInfo": {
             "type": "object",
-            "required": [
-                "recipeId",
-                "resultValue",
-                "stepName",
-                "stepOrder"
-            ],
             "properties": {
-                "experimentCondition": {
-                    "description": "ExperimentCondition string 实验条件\n选填，实验步骤的实验条件描述，最长 255 字符\n示例值: \"实验条件\"",
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "实验条件"
-                },
-                "recipeId": {
-                    "description": "RecipeID string 配方ID\n配方的UUID",
-                    "type": "string",
-                    "example": "123e4567-e89b-12d3-a456-426614174002"
-                },
                 "resultValue": {
-                    "description": "ResultValue string 步骤结果值\n选填，实验步骤的结果值，最长 256 字符\n示例值: \"步骤结果值\"",
+                    "description": "ResultValue string 实验条件\n步骤对应的实验结果\nresin_mixing=树脂混合 {\"树脂粘度\":{\"温度\":27,\"粘度\":1350},\"环氧当量\":26}\nhardener_mixing=固化剂混合 {\"胺值\":9.5,\"固化剂粘度\":{\"温度\":27,\"粘度\":null}}\nresin_hardener_mixing=树脂/固化剂混合 {\"温度\":\"27℃\",\"可用时间\":140,\"混合粘度\":276}\nmechanical_performance=力学性能 {\"value\": 79}",
                     "type": "string",
-                    "maxLength": 256,
                     "example": "步骤结果值"
                 },
-                "stepName": {
-                    "description": "StepName string 步骤名称\n实验步骤的名称，必填，限制长度为 1-255 字符\n示例值: \"步骤名称\"",
+                "stepCategory": {
+                    "description": "StepCategory 实验步骤类别\n实验步骤的类型，包含 'resin_mixing'、'hardener_mixing'、'resin_hardener_mixing'、'mechanical_performance'",
                     "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1,
-                    "example": "步骤名称"
+                    "example": "resin_mixing"
                 },
-                "stepOrder": {
-                    "description": "StepOrder int 排序(从大到小)\n必填，实验步骤的执行排序(从大到小)，必须为正整数\n示例值: 1",
-                    "type": "integer",
-                    "minimum": 1,
-                    "example": 1
-                }
-            }
-        },
-        "data.ExperimentStepData": {
-            "type": "object",
-            "required": [
-                "stepOrder"
-            ],
-            "properties": {
-                "experimentCondition": {
-                    "description": "ExperimentCondition string 实验条件\n步骤对应的实验条件描述",
+                "stepCondition": {
+                    "description": "StepCondition string 实验条件\n步骤对应的实验条件描述",
                     "type": "string",
-                    "example": "实验条件"
-                },
-                "recipeId": {
-                    "description": "RecipeID string 配方ID\n配方的UUID",
-                    "type": "string",
-                    "example": "123e4567-e89b-12d3-a456-426614174002"
-                },
-                "resultValue": {
-                    "description": "ResultValue string 实验条件\n步骤对应的实验结果",
-                    "type": "string",
-                    "example": "步骤结果值"
+                    "example": "步骤实验条件"
                 },
                 "stepId": {
                     "description": "StepID string 步骤ID\n唯一标识实验步骤的UUID",
@@ -1048,145 +815,17 @@ const docTemplate = `{
                     "description": "StepName string 步骤名称\n描述实验步骤的名称",
                     "type": "string",
                     "example": "步骤名称"
-                },
-                "stepNameDescription": {
-                    "description": "StepNameDescription string 实验步骤描述\n实验步骤描述",
-                    "type": "string",
-                    "example": "实验步骤描述"
-                },
-                "stepOrder": {
-                    "description": "StepOrder int 排序(从大到小)\n实验步骤的执行排序(从大到小)\n示例值: 1",
-                    "type": "integer",
-                    "minimum": 1,
-                    "example": 1
-                }
-            }
-        },
-        "data.ExperimentStepUpdate": {
-            "type": "object",
-            "required": [
-                "recipeId",
-                "resultValue",
-                "stepName",
-                "stepOrder"
-            ],
-            "properties": {
-                "experimentCondition": {
-                    "description": "ExperimentCondition string 实验条件\n选填，实验步骤的实验条件描述，最长 255 字符\n示例值: \"实验条件\"",
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "实验条件"
-                },
-                "recipeId": {
-                    "description": "RecipeID string 配方ID\n配方的UUID",
-                    "type": "string",
-                    "example": "123e4567-e89b-12d3-a456-426614174002"
-                },
-                "resultValue": {
-                    "description": "ResultValue string 步骤结果值\n选填，实验步骤的结果值，最长 256 字符\n示例值: \"步骤结果值\"",
-                    "type": "string",
-                    "maxLength": 256,
-                    "example": "步骤结果值"
-                },
-                "stepName": {
-                    "description": "StepName string 步骤名称\n实验步骤的名称，必填，限制长度为 1-255 字符\n示例值: \"步骤名称\"",
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1,
-                    "example": "步骤名称"
-                },
-                "stepOrder": {
-                    "description": "StepOrder int 排序(从大到小)\n必填，实验步骤的执行排序(从大到小)，必须为正整数\n示例值: 1",
-                    "type": "integer",
-                    "minimum": 1,
-                    "example": 1
-                }
-            }
-        },
-        "data.ExperimentUpdateRequest": {
-            "type": "object",
-            "required": [
-                "experimentId"
-            ],
-            "properties": {
-                "endTime": {
-                    "description": "EndTime string 实验结束时间\n选填，格式为 \"2006-01-02T15:04:05Z\"（RFC3339 格式）\n示例值: \"2024-02-05T18:00:00Z\"",
-                    "type": "string",
-                    "example": "2024-02-05T18:00:00Z"
-                },
-                "experimentId": {
-                    "description": "ExperimentID string 实验ID\n唯一标识实验的 UUID，必填，用于确定要更新的实验记录\n示例值: \"123e4567-e89b-12d3-a456-426614174000\"",
-                    "type": "string",
-                    "example": "123e4567-e89b-12d3-a456-426614174000"
-                },
-                "experimentName": {
-                    "description": "ExperimentName string 实验名称\n实验的名称，选填；如果填写，名称长度限制为 2-128 字符\n支持中文、英文、数字及特殊字符\n示例值: \"实验名称\"",
-                    "type": "string",
-                    "maxLength": 128,
-                    "minLength": 2,
-                    "example": "实验名称"
-                },
-                "experimenter": {
-                    "description": "Experimenter string 实验者\n实验的负责人，选填；如果填写，名称长度限制为 1-128 字符\n示例值: \"张三\"",
-                    "type": "string",
-                    "maxLength": 128,
-                    "minLength": 1,
-                    "example": "张三"
-                },
-                "startTime": {
-                    "description": "StartTime string 实验开始时间\n选填，格式为 \"2006-01-02T15:04:05Z\"（RFC3339 格式）\n示例值: \"2024-02-05T08:30:00Z\"",
-                    "type": "string",
-                    "example": "2024-02-05T08:30:00Z"
-                },
-                "steps": {
-                    "description": "Steps []ExperimentStepUpdate 实验步骤列表\n选填，包含该实验的所有步骤信息，每个步骤包含名称、描述、实验条件、结果值及材料组等\n示例值: [{\"stepName\": \"步骤名称\", \"stepNameDescription\": \"实验步骤描述\", \"experimentCondition\": \"实验条件\", \"resultValue\": \"步骤结果值\", \"materialGroups\": []}]",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.ExperimentStepUpdate"
-                    }
-                }
-            }
-        },
-        "data.MaterialData": {
-            "type": "object",
-            "properties": {
-                "materialName": {
-                    "description": "MaterialName string 材料名称\n材料的名称信息",
-                    "type": "string",
-                    "example": "材料名称"
-                },
-                "percentage": {
-                    "description": "Percentage float64 材料占比\n材料在材料组中的占比，百分比形式",
-                    "type": "number",
-                    "example": 60
-                }
-            }
-        },
-        "data.MaterialGroupData": {
-            "type": "object",
-            "properties": {
-                "materialGroupName": {
-                    "description": "MaterialGroupName string 材料组名称\n材料组的名称信息",
-                    "type": "string",
-                    "example": "材料组名称"
-                },
-                "materials": {
-                    "description": "Materials []MaterialData 材料列表\n材料组内的具体材料信息",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.MaterialData"
-                    }
-                },
-                "proportion": {
-                    "description": "Proportion float64 材料组占比\n材料组在实验步骤中的占比，百分比形式",
-                    "type": "number",
-                    "example": 25.5
                 }
             }
         },
         "data.MaterialGroupInfo": {
             "type": "object",
             "properties": {
+                "materialGroupCategory": {
+                    "description": "MaterialGroupCategory string 材料组类别\n材料组类别 resin=树脂, hardener=固化剂",
+                    "type": "string",
+                    "example": "材料组类别"
+                },
                 "materialGroupId": {
                     "description": "MaterialGroupID string 材料组ID\n唯一标识材料组的UUID",
                     "type": "string",
@@ -1204,10 +843,22 @@ const docTemplate = `{
                         "$ref": "#/definitions/data.MaterialInfo"
                     }
                 },
+                "parentId": {
+                    "description": "MaterialGroupParentID string 材料组父级ID 顶级材料组为空\n唯一标识材料组父级的UUID",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174003"
+                },
                 "proportion": {
                     "description": "Proportion float64 材料组占比\n材料组在实验步骤中的占比，百分比形式",
                     "type": "number",
                     "example": 25.5
+                },
+                "subGroups": {
+                    "description": "SubGroups []MaterialGroupInfo 子材料组\n当前材料组包含的子材料组列表，支持层级嵌套",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/data.MaterialGroupInfo"
+                    }
                 }
             }
         },
@@ -1231,130 +882,76 @@ const docTemplate = `{
                 }
             }
         },
-        "data.RecipeAddRequest": {
+        "data.TaskData": {
             "type": "object",
             "properties": {
-                "materialGroups": {
-                    "description": "MaterialGroupData []MaterialGroupData 材料组列表\n选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)\n示例值: [{\"materialGroupName\": \"材料组名称\", \"proportion\": 25.5, \"materials\": []}]",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.MaterialGroupData"
-                    }
-                },
-                "recipeName": {
-                    "description": "RecipeName string 配方名称，选填，长度限制：2-255字符\n用于按名称模糊查询实验记录",
+                "aiFilePath": {
+                    "description": "AiFilePath string ai处理后json文件路径\nAI 处理后的 JSON 文件存储路径",
                     "type": "string",
-                    "maxLength": 255,
-                    "minLength": 2,
-                    "example": "配方名称"
+                    "example": "/uploads/2024/11/240628AI模型数据200组 含FRP性能-(对外）FD-ai.json"
                 },
-                "sort": {
-                    "description": "Sort int 排序 优先级从大到小\n选填，必须是大于等于 0 的整数\n示例值: 1",
-                    "type": "integer",
-                    "minimum": 0,
-                    "example": 1
-                }
-            }
-        },
-        "data.RecipeData": {
-            "type": "object",
-            "properties": {
+                "batchId": {
+                    "description": "BatchID string 批次号\n用于标识一组相关任务的批次UUID",
+                    "type": "string",
+                    "example": "987e6543-e89b-12d3-a456-426614174001"
+                },
                 "createdAt": {
-                    "description": "CreatedAt 创建时间\n格式为时间戳，创建时间",
+                    "description": "CreatedAt string 创建时间\n任务的创建时间，格式 2006-01-02 15:04:05",
                     "type": "string",
-                    "example": "2024-11-18T10:00:00Z"
+                    "example": "2006-01-02 15:04:05"
                 },
-                "errMsg": {
-                    "description": "ErrMsg string 错误信息\n当 isErr 为 true 时，该字段包含具体的错误描述信息",
+                "fileName": {
+                    "description": "FileName string 文件名称\n任务关联的文件名称",
                     "type": "string",
-                    "example": "The proportion of the material group is not 100%"
+                    "example": "240628AI模型数据200组 含FRP性能-(对外）FD"
                 },
-                "isErr": {
-                    "description": "IsErr bool 是否发生错误\n表示该配方数据处理过程中是否出现错误，true 表示有错误，false 表示无错误",
-                    "type": "boolean",
-                    "example": false
-                },
-                "materialGroups": {
-                    "description": "MaterialGroups []MaterialGroupInfo 材料组\n该步骤中涉及的材料组信息",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.MaterialGroupInfo"
-                    }
-                },
-                "recipeId": {
-                    "description": "RecipeId string 配方id\nUUID",
+                "filePath": {
+                    "description": "FilePath string 文件路径\n存储文件的路径，指向文件在服务器上的位置",
                     "type": "string",
-                    "example": "id"
+                    "example": "/uploads/2024/11/240628AI模型数据200组 含FRP性能-(对外）FD.json"
                 },
-                "recipeName": {
-                    "description": "RecipeName string 配方名称\n配方名称信息",
+                "jsonFilePath": {
+                    "description": "JSONFilePath string 硬代码json文件路径\nJSON 文件存储的路径",
                     "type": "string",
-                    "example": "配方名称"
+                    "example": "/uploads/2024/11/240628AI模型数据200组 含FRP性能-(对外）FD.json"
                 },
-                "recipeUsedInExperimentNum": {
-                    "description": "RecipeUsedInExperimentNum int64\n配方被实验使用数",
-                    "type": "integer",
-                    "example": 11
+                "remark": {
+                    "description": "Remark string 任务状态描述\n对任务状态的额外描述信息，如错误信息等",
+                    "type": "string",
+                    "example": "任务正在处理中"
                 },
-                "sort": {
-                    "description": "Sort int\n排序 优先级从大到小",
-                    "type": "integer",
-                    "example": 1
+                "status": {
+                    "description": "Status string 任务状态\n当前任务的处理状态，pending=待处理, processing=处理中, success=成功, failure=失败",
+                    "type": "string",
+                    "example": "pending"
+                },
+                "taskId": {
+                    "description": "TaskID string 任务ID\n唯一标识任务的UUID",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "updatedAt": {
+                    "description": "UpdatedAt string 修改时间\n任务的最后更新时间，采用 ISO 8601 格式（例如：2024-11-18T12:00:00Z）",
+                    "type": "string",
+                    "example": "2024-11-18T12:00:00Z"
                 }
             }
         },
-        "data.RecipeDeleteRequest": {
+        "data.TaskListRequest": {
             "type": "object",
-            "required": [
-                "recipeId"
-            ],
             "properties": {
-                "recipeId": {
-                    "description": "RecipeId 是配方的唯一标识符\n必填字段，格式为 UUID v4\n示例值: \"123e4567-e89b-12d3-a456-426614174000\"",
+                "endTime": {
+                    "description": "EndTime string 结束时间\n任务的创建时间，格式 2006-01-02 15:04:05",
                     "type": "string",
-                    "example": "配方id"
-                }
-            }
-        },
-        "data.RecipeEditRequest": {
-            "type": "object",
-            "required": [
-                "materialGroups",
-                "recipeId",
-                "recipeName",
-                "sort"
-            ],
-            "properties": {
-                "materialGroups": {
-                    "description": "MaterialGroupData []MaterialGroupData 材料组列表\n选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)\n示例值: [{\"materialGroupName\": \"材料组名称\", \"proportion\": 25.5, \"materials\": []}]",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.MaterialGroupInfo"
-                    }
+                    "example": "2006-01-02 15:04:05"
                 },
-                "recipeId": {
-                    "description": "RecipeId 是配方的唯一标识符\n必填字段，格式为 UUID v4\n示例值: \"123e4567-e89b-12d3-a456-426614174000\"",
+                "fileName": {
+                    "description": "FileName string 文件名称，选填，长度限制：2-128字符\n用于按文件名称模糊查询任务记录",
                     "type": "string",
-                    "example": "配方id"
-                },
-                "recipeName": {
-                    "description": "RecipeName string 配方名称，选填，长度限制：2-255字符\n用于按名称模糊查询实验记录",
-                    "type": "string",
-                    "maxLength": 255,
+                    "maxLength": 128,
                     "minLength": 2,
-                    "example": "配方名称"
+                    "example": "文件名称"
                 },
-                "sort": {
-                    "description": "Sort int 排序 优先级从大到小\n选填，必须是大于等于 0 的整数\n示例值: 1",
-                    "type": "integer",
-                    "minimum": 0,
-                    "example": 1
-                }
-            }
-        },
-        "data.RecipeFormListRequest": {
-            "type": "object",
-            "properties": {
                 "page": {
                     "description": "Page 页码，选填，范围限制：[1,10000]\n用于分页查询管理员列表，最小值为1，最大值为10000",
                     "type": "integer",
@@ -1369,130 +966,36 @@ const docTemplate = `{
                     "minimum": 1,
                     "example": 10
                 },
-                "recipeName": {
-                    "description": "RecipeName 是一个可选的字符串字段，用于按配方名称进行模糊查询。\n该字段的长度必须在 2 到 255 个字符之间。如果不提供该字段，则不进行名称过滤。\n示例值：\"配方名称\"，系统会查找名称中包含该字符串的所有配方记录。",
+                "startTime": {
+                    "description": "StartTime string 开始时间\n任务的创建时间，格式 2006-01-02 15:04:05",
                     "type": "string",
-                    "maxLength": 255,
-                    "minLength": 2,
-                    "example": "配方名称"
+                    "example": "2006-01-02 15:04:05"
+                },
+                "status": {
+                    "description": "Status string 任务状态\n当前任务的处理状态，pending=待处理, processing=处理中, success=成功, failure=失败",
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "processing",
+                        "success",
+                        "failure"
+                    ],
+                    "example": "pending"
                 }
             }
         },
-        "data.RecipeFormListResponse": {
+        "data.TaskListResponse": {
             "type": "object",
             "properties": {
                 "list": {
-                    "description": "List 是一个 RecipeInfo 类型的切片，用于存储分页返回的配方记录列表。\n例如，列表中可能包含多个不同配方的信息，前端可以根据这些信息展示配方列表。",
+                    "description": "List []TaskData 数据\n分页返回的任务记录列表",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/data.RecipeInfo"
+                        "$ref": "#/definitions/data.TaskData"
                     }
                 },
                 "total": {
-                    "description": "Total 表示符合查询条件的配方记录的总条数。\n示例值：\"100\"，表示共有 100 条记录符合查询条件。",
-                    "type": "integer",
-                    "example": 100
-                }
-            }
-        },
-        "data.RecipeInfo": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "description": "Id 是配方的唯一标识符，通常为 UUID 格式的字符串。\n示例值: \"123e4567-e89b-12d3-a456-426614174000\"",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "Name 是配方的名称，用于描述该配方的内容或用途。\n示例值: \"实验名称\"",
-                    "type": "string"
-                }
-            }
-        },
-        "data.RecipeInfoRequest": {
-            "type": "object",
-            "required": [
-                "recipeId"
-            ],
-            "properties": {
-                "recipeId": {
-                    "description": "RecipeId 是配方的唯一标识符\n必填字段，格式为 UUID v4\n示例值: \"123e4567-e89b-12d3-a456-426614174000\"",
-                    "type": "string",
-                    "example": "配方id"
-                }
-            }
-        },
-        "data.RecipeInfoResponse": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "description": "CreatedAt 表示配方的创建时间\n时间格式为 ISO 8601 格式的 UTC 时间戳\n示例值: \"2024-11-18T10:00:00Z\"",
-                    "type": "string",
-                    "example": "2024-11-18T10:00:00Z"
-                },
-                "materialGroups": {
-                    "description": "MaterialGroups 包含与该配方关联的材料组信息\n每个材料组都包含详细的材料信息",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.MaterialGroupInfo"
-                    }
-                },
-                "recipeBasedExperiment": {
-                    "description": "RecipeBasedExperiment 包含基于此配方创建的实验信息列表",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.ExperimentInfo"
-                    }
-                },
-                "recipeId": {
-                    "description": "RecipeId string 配方id\nUUID",
-                    "type": "string",
-                    "example": "id"
-                },
-                "recipeName": {
-                    "description": "RecipeName 表示配方的名称\n返回配方的名称信息\n示例值: \"配方名称\"",
-                    "type": "string",
-                    "example": "配方名称"
-                }
-            }
-        },
-        "data.RecipeListRequest": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "description": "Page 页码，选填，范围限制：[1,10000]\n用于分页查询管理员列表，最小值为1，最大值为10000",
-                    "type": "integer",
-                    "maximum": 10000,
-                    "minimum": 1,
-                    "example": 1
-                },
-                "pageSize": {
-                    "description": "PageSize 每页大小，选填，范围限制：[1,10000]\n用于限制每页返回的管理员数量，最小值为1，最大值为10000",
-                    "type": "integer",
-                    "maximum": 10000,
-                    "minimum": 1,
-                    "example": 10
-                },
-                "recipeName": {
-                    "description": "RecipeName string 配方名称，选填，长度限制：2-255字符\n用于按名称查询配方列表 前缀模糊匹配",
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 2,
-                    "example": "配方名称"
-                }
-            }
-        },
-        "data.RecipeListResponse": {
-            "type": "object",
-            "properties": {
-                "list": {
-                    "description": "List []RecipeData 数据\n分页返回的配方列表",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/data.RecipeData"
-                    }
-                },
-                "total": {
-                    "description": "Total int64 总条数\n返回符合条件的实验记录总数",
+                    "description": "Total int64 总条数\n返回符合条件的任务记录总数",
                     "type": "integer",
                     "example": 100
                 }

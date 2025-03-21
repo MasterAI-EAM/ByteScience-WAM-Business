@@ -35,7 +35,7 @@ func (api PredictApi) ForwardDirection(ctx *gin.Context, req *ai.ForwardDirectio
 	for _, group := range req.MaterialGroups {
 		totalProportion += group.Proportion
 		for _, material := range group.Materials {
-			totalPercentage += material.Percentage
+			totalPercentage += material.Proportion
 		}
 		if totalPercentage != 100 {
 			return nil, utils.NewBusinessError(utils.MaterialProportionSumNot100Code, "")

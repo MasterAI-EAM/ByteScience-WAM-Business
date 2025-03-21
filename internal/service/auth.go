@@ -6,19 +6,25 @@ import (
 	"ByteScience-WAM-Business/internal/model/dto/auth"
 	"ByteScience-WAM-Business/internal/model/entity"
 	"ByteScience-WAM-Business/internal/utils"
+	"ByteScience-WAM-Business/pkg/db"
 	"ByteScience-WAM-Business/pkg/logger"
 	"context"
+	"fmt"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 	"time"
 )
 
 type AuthService struct {
-	dao *dao.UserDao // 添加 AdminDao 作为成员
+	dao       *dao.UserDao   // 添加 AdminDao 作为成员
+	recordDao *dao.RecordDao // 添加 AdminDao 作为成员
 }
 
 // NewAuthService 创建一个新的 AuthService 实例
 func NewAuthService() *AuthService {
 	return &AuthService{
-		dao: dao.NewUserDao(),
+		dao:       dao.NewUserDao(),
+		recordDao: dao.NewRecordDao(),
 	}
 }
 
@@ -70,9 +76,26 @@ func (as AuthService) Login(ctx context.Context, req *auth.LoginRequest) (*auth.
 		return nil, utils.NewBusinessError(utils.InternalError, "")
 	}
 
-	// 记录登陆时间
-	if err = as.dao.UpdateLastLoginTime(ctx, admin.ID); err != nil {
-		logger.Logger.Errorf("[Login] Error UpdateLastLoginTime: %v", err)
+	if err = db.Client.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 记录登陆时间
+		if err = as.dao.UpdateLastLoginTime(ctx, tx, admin.ID); err != nil {
+			logger.Logger.Errorf("[Login] Error UpdateLastLoginTime: %v", err)
+		}
+
+		// 记录登陆
+		if err = as.recordDao.Insert(ctx, tx, &entity.OperationRecord{
+			ID:     uuid.NewString(),
+			OpType: conf.Login,
+			UserID: admin.ID,
+			Desc:   fmt.Sprintf("%s 在 %s 登陆", admin.Username, time.Now().Format("2006-01-02 15:04:05")),
+		}); err != nil {
+			logger.Logger.Errorf("[Login] Error UpdateLastLoginTime: %v", err)
+			return err
+		}
+
+		return nil
+	}); err != nil {
+
 	}
 
 	// 返回登录响应
@@ -142,9 +165,25 @@ func (as AuthService) ChangePassword(ctx context.Context, req *auth.ChangePasswo
 		entity.UsersColumns.Password:  hashedPassword,
 		entity.UsersColumns.UpdatedAt: time.Now(),
 	}
-	if err := as.dao.Update(ctx, admin.ID, updates); err != nil {
-		logger.Logger.Errorf("[ChangePassword] Error updating password for user %s: %v", admin.ID, err)
-		return utils.NewBusinessError(utils.PasswordChangeFailedCode, "")
+	if err = db.Client.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := as.dao.Update(ctx, tx, admin.ID, updates); err != nil {
+			logger.Logger.Errorf("[ChangePassword] Error updating password for user %s: %v", admin.ID, err)
+			return utils.NewBusinessError(utils.PasswordChangeFailedCode, "")
+		}
+
+		// 记录操作
+		if err = as.recordDao.Insert(ctx, tx, &entity.OperationRecord{
+			ID:     uuid.NewString(),
+			OpType: conf.ChangPassword,
+			UserID: admin.ID,
+			Desc:   fmt.Sprintf("%s 在 %s 修改了密码", admin.Username, time.Now().Format("2006-01-02 15:04:05")),
+		}); err != nil {
+			logger.Logger.Errorf("[ChangePassword] create record: %v", err)
+			return err
+		}
+
+		return nil
+	}); err != nil {
 	}
 
 	return nil

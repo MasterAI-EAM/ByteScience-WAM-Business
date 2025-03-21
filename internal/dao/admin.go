@@ -1,15 +1,13 @@
 package dao
 
 import (
+	"ByteScience-WAM-Business/internal/model/entity"
 	"ByteScience-WAM-Business/internal/utils"
 	"ByteScience-WAM-Business/pkg/db"
 	"context"
 	"errors"
-	"strings"
-	"time"
-
-	"ByteScience-WAM-Business/internal/model/entity"
 	"gorm.io/gorm"
+	"strings"
 )
 
 // AdminDao 数据访问对象，封装角色相关操作
@@ -18,11 +16,6 @@ type AdminDao struct{}
 // NewAdminDao 创建一个新的 AdminDao 实例
 func NewAdminDao() *AdminDao {
 	return &AdminDao{}
-}
-
-// Insert 插入管理员记录
-func (ad *AdminDao) Insert(ctx context.Context, admin *entity.Admins) error {
-	return db.Client.WithContext(ctx).Create(admin).Error
 }
 
 // GetByID 根据 ID 获取管理员
@@ -80,24 +73,6 @@ func (ad *AdminDao) GetByFields(ctx context.Context, username, email, phone stri
 	return &admin, nil
 }
 
-// Update 更新管理员信息
-func (ad *AdminDao) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Admins{}).
-		Where(entity.AdminsColumns.ID+" = ?", id).
-		Updates(updates).
-		Error
-}
-
-// SoftDeleteByID 软删除管理员记录
-func (ad *AdminDao) SoftDeleteByID(ctx context.Context, id string) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Admins{}).
-		Where(entity.AdminsColumns.ID+" = ?", id).
-		Update(entity.AdminsColumns.DeletedAt, time.Now()).
-		Error
-}
-
 // Query 分页查询管理员
 func (ad *AdminDao) Query(ctx context.Context, page int, pageSize int,
 	filters map[string]interface{}) ([]*entity.Admins, int64, error) {
@@ -139,13 +114,4 @@ func (ad *AdminDao) Query(ctx context.Context, page int, pageSize int,
 	}
 
 	return admins, total, nil
-}
-
-// UpdateLastLoginTime 更新管理员的最后登录时间
-func (ad *AdminDao) UpdateLastLoginTime(ctx context.Context, id string) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Admins{}).
-		Where(entity.AdminsColumns.ID+" = ?", id).
-		Update(entity.AdminsColumns.LastLoginAt, time.Now()).
-		Error
 }

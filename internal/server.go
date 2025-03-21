@@ -1,9 +1,11 @@
 package internal
 
 import (
+	"ByteScience-WAM-Business/cron"
 	"ByteScience-WAM-Business/internal/routers"
 	"ByteScience-WAM-Business/middleware"
 	"ByteScience-WAM-Business/pkg/db"
+	"ByteScience-WAM-Business/pkg/gpt"
 	"ByteScience-WAM-Business/pkg/logger"
 	"ByteScience-WAM-Business/pkg/redis"
 	"context"
@@ -41,6 +43,13 @@ func ServerStart(eng *gin.Engine, mode string) {
 	routers.Register(eng) // 注册路由
 	db.MysqlInit()        // 初始化MySQL连接（日志也是在这里初始化）
 	redis.RedisInit()     // 初始化Redis连接
+	cron.StartForever()   // 执行消费者任务
+
+	// 创建gpt实例
+	_, err = gpt.NewGptClient(nil)
+	if err != nil {
+		log.Fatalf("Failed to initialize gpt: %v", err)
+	}
 
 	server := &http.Server{
 		Addr:         ":" + conf.GlobalConf.System.Addr,
@@ -49,6 +58,9 @@ func ServerStart(eng *gin.Engine, mode string) {
 		WriteTimeout: conf.GlobalConf.System.Http.WriteTimeout,
 		IdleTimeout:  conf.GlobalConf.System.Http.IdleTimeout,
 	}
+
+	// 映射静态文件
+	eng.Static("/files", conf.GlobalConf.File.TaskPath)
 
 	// 启动服务
 	go func() {

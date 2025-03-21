@@ -12,7 +12,7 @@ definitions:
           MaterialGroups []MaterialGroupData 材料组
           该步骤中涉及的材料组信息
         items:
-          $ref: '#/definitions/data.MaterialGroupData'
+          $ref: '#/definitions/ai.MaterialGroupData'
         type: array
       stepName:
         description: |-
@@ -73,6 +73,43 @@ definitions:
         example: 步骤名称
         type: string
     type: object
+  ai.MaterialData:
+    properties:
+      materialName:
+        description: |-
+          MaterialName string 材料名称
+          材料的名称信息
+        example: 材料名称
+        type: string
+      proportion:
+        description: |-
+          Proportion float64 材料占比
+          材料在材料组中的占比，百分比形式
+        example: 25.5
+        type: number
+    type: object
+  ai.MaterialGroupData:
+    properties:
+      materialGroupName:
+        description: |-
+          MaterialGroupName string 材料组名称
+          材料组的名称信息
+        example: 材料组名称
+        type: string
+      materials:
+        description: |-
+          Materials []MaterialData 材料列表
+          材料组内的具体材料信息
+        items:
+          $ref: '#/definitions/ai.MaterialData'
+        type: array
+      proportion:
+        description: |-
+          Proportion float64 材料组占比
+          材料组在实验步骤中的占比，百分比形式
+        example: 25.5
+        type: number
+    type: object
   auth.ChangePasswordRequest:
     properties:
       confirmPassword:
@@ -128,78 +165,26 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwOTkwMTQsImlhdCI6MTczMjA5OTAxNCwidXNlcklkIjoiMmE1ZWVkNDItMjVhMy00MGJlLTlmY2QtNjEzMmJlYzgzNTE3In0.YyrvQS66uYNVtCKKi7rm7xqJrCIFSq12SXCJcqAxKso
         type: string
     type: object
-  data.ExperimentAddRequest:
-    properties:
-      endTime:
-        description: |-
-          EndTime string 实验结束时间
-          选填，格式为 "2006-01-02T15:04:05Z"（RFC3339 格式）
-          示例值: "2024-02-05T18:00:00Z"
-        example: "2024-02-05T18:00:00Z"
-        type: string
-      experimentName:
-        description: |-
-          ExperimentName string 实验名称
-          实验的名称，选填；如果填写，名称长度限制为 2-128 字符
-          支持中文、英文、数字及特殊字符
-          示例值: "实验名称"
-        example: 实验名称
-        maxLength: 128
-        minLength: 2
-        type: string
-      experimenter:
-        description: |-
-          Experimenter string 实验者
-          实验的负责人，选填；如果填写，名称长度限制为 1-128 字符
-          示例值: "张三"
-        example: 张三
-        maxLength: 128
-        minLength: 1
-        type: string
-      sort:
-        description: |-
-          Sort int 排序 优先级从大到小
-          选填，必须是大于等于 0 的整数
-          示例值: 1
-        example: 1
-        minimum: 0
-        type: integer
-      startTime:
-        description: |-
-          StartTime string 实验开始时间
-          选填，格式为 "2006-01-02T15:04:05Z"（RFC3339 格式）
-          示例值: "2024-02-05T08:30:00Z"
-        example: "2024-02-05T08:30:00Z"
-        type: string
-      steps:
-        description: |-
-          Steps []ExperimentStepAdd 实验步骤列表
-          选填，包含该实验的所有步骤信息，每个步骤包含名称、描述、实验条件、结果值及材料组等
-          示例值: [{"stepName": "步骤名称", "stepNameDescription": "实验步骤描述", "experimentCondition": "实验条件", "resultValue": "步骤结果值", "materialGroups": []}]
-        items:
-          $ref: '#/definitions/data.ExperimentStepAdd'
-        type: array
-    type: object
   data.ExperimentData:
     properties:
       createdAt:
         description: |-
           CreatedAt 创建时间
           格式为时间戳，创建时间
-        example: "2024-11-18T10:00:00Z"
+        example: "2006-01-02 15:04:05"
         type: string
       endTime:
         description: |-
           EndTime 实验结束时间
           格式为时间戳，实验结束时间
-        example: "2024-11-18T10:00:00Z"
+        example: "2006-01-02 15:04:05"
         type: string
       entryCategory:
         description: |-
-          EntryCategory int8 录入类别
-          1 表示文件导入，2 表示页面输入
-        example: 1
-        type: integer
+          EntryCategory string 录入类别
+          file_import=文件导入, manual_entry=页面录入
+        example: "1"
+        type: string
       experimentId:
         description: |-
           ExperimentID string 实验ID
@@ -218,36 +203,29 @@ definitions:
           进行实验的人员名称
         example: 张三
         type: string
-      fileId:
-        description: |-
-          FileID string 文件ID
-          关联的文件资源ID
-        example: 123e4567-e89b-12d3-a456-426614174001
-        type: string
-      fileName:
-        description: |-
-          fileName string 文件名
-          关联的文件资源ID
-        example: 240628AI模型数据200组 含FRP性能-(对外）FD
-        type: string
       startTime:
         description: |-
           StartTime 实验开始时间
           格式为时间戳，实验开始时间
-        example: "2024-11-18T10:00:00Z"
+        example: "2006-01-02 15:04:05"
         type: string
-      steps:
+      status:
         description: |-
-          Steps []ExperimentStepData 实验步骤
-          包含该实验的步骤信息
-        items:
-          $ref: '#/definitions/data.ExperimentStepData'
-        type: array
+          Status 实验状态
+          表示实验的审核状态，包含 'pending_review'、'approved'、'rejected'
+        example: pending_review
+        type: string
       userId:
         description: |-
           UserID string 操作用户ID
           记录操作该实验的用户 ID
         example: 987e6543-d21b-34c5-a654-123456789abc
+        type: string
+      username:
+        description: |-
+          Username 用户名
+          表示实验相关的用户名
+        example: testuser
         type: string
     type: object
   data.ExperimentDeleteRequest:
@@ -259,21 +237,100 @@ definitions:
         example: 123e4567-e89b-12d3-a456-426614174000
         type: string
     type: object
-  data.ExperimentInfo:
+  data.ExperimentInfoRequest:
     properties:
-      id:
+      experimentId:
         description: |-
-          Id 是实验的唯一标识符
-          示例值: "123e4567-e89b-12d3-a456-426614174000"
+          ExperimentID string 实验ID
+          唯一标识实验的UUID
+        example: 123e4567-e89b-12d3-a456-426614174000
         type: string
-      name:
+    type: object
+  data.ExperimentInfoResponse:
+    properties:
+      createdAt:
         description: |-
-          Name 是实验的名称
-          示例值: "实验名称"
+          CreatedAt 创建时间
+          格式为时间戳，创建时间
+        example: "2006-01-02 15:04:05"
+        type: string
+      endTime:
+        description: |-
+          EndTime 实验结束时间
+          格式为时间戳，实验结束时间
+        example: "2006-01-02 15:04:05"
+        type: string
+      entryCategory:
+        description: |-
+          EntryCategory string 录入类别
+          file_import=文件导入, manual_entry=页面录入
+        example: "1"
+        type: string
+      experimentId:
+        description: |-
+          experimentId 实验编号，必填，UUID格式
+          唯一标识要删除的实验，格式必须为UUID4
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      experimentName:
+        description: |-
+          ExperimentName string 实验名称
+          实验的名称信息
+        example: 实验名称
+        type: string
+      experimenter:
+        description: |-
+          Experimenter string 实验者
+          进行实验的人员名称
+        example: 张三
+        type: string
+      materialGroups:
+        description: |-
+          MaterialGroups []MaterialGroupInfo 材料组
+          该步骤中涉及的材料组信息
+        items:
+          $ref: '#/definitions/data.MaterialGroupInfo'
+        type: array
+      startTime:
+        description: |-
+          StartTime 实验开始时间
+          格式为时间戳，实验开始时间
+        example: "2006-01-02 15:04:05"
+        type: string
+      status:
+        description: |-
+          Status 实验状态
+          表示实验的审核状态，包含 'pending_review'、'approved'、'rejected'
+        example: pending_review
+        type: string
+      stepInfo:
+        description: |-
+          StepInfo []ExperimentStepInfo 实验步骤数据
+          该步骤中涉及的材料组信息
+        items:
+          $ref: '#/definitions/data.ExperimentStepInfo'
+        type: array
+      userId:
+        description: |-
+          UserID string 操作用户ID
+          记录操作该实验的用户 ID
+        example: 987e6543-d21b-34c5-a654-123456789abc
+        type: string
+      username:
+        description: |-
+          Username 用户名
+          表示实验相关的用户名
+        example: testuser
         type: string
     type: object
   data.ExperimentListRequest:
     properties:
+      endTime:
+        description: |-
+          EndTime string 结束时间
+          创建时间，格式 2006-01-02 15:04:05
+        example: "2006-01-02 15:04:05"
+        type: string
       experimentName:
         description: |-
           ExperimentName string 实验名称，选填，长度限制：2-128字符
@@ -306,6 +363,28 @@ definitions:
         maximum: 10000
         minimum: 1
         type: integer
+      startTime:
+        description: |-
+          StartTime string 开始时间
+          创建时间，格式 2006-01-02 15:04:05
+        example: "2006-01-02 15:04:05"
+        type: string
+      status:
+        description: |-
+          Status string 审核状态
+          当前任务的处理状态，pending_review=待审核, approved=审核通过, rejected=审核不通过
+        enum:
+        - pending_review
+        - approved
+        - rejected
+        example: pending_review
+        type: string
+      taskId:
+        description: |-
+          TaskId string 任务id
+          唯一标识实验的UUID
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
     type: object
   data.ExperimentListResponse:
     properties:
@@ -323,72 +402,29 @@ definitions:
         example: 100
         type: integer
     type: object
-  data.ExperimentStepAdd:
+  data.ExperimentStepInfo:
     properties:
-      experimentCondition:
-        description: |-
-          ExperimentCondition string 实验条件
-          选填，实验步骤的实验条件描述，最长 255 字符
-          示例值: "实验条件"
-        example: 实验条件
-        maxLength: 255
-        type: string
-      recipeId:
-        description: |-
-          RecipeID string 配方ID
-          配方的UUID
-        example: 123e4567-e89b-12d3-a456-426614174002
-        type: string
-      resultValue:
-        description: |-
-          ResultValue string 步骤结果值
-          选填，实验步骤的结果值，最长 256 字符
-          示例值: "步骤结果值"
-        example: 步骤结果值
-        maxLength: 256
-        type: string
-      stepName:
-        description: |-
-          StepName string 步骤名称
-          实验步骤的名称，必填，限制长度为 1-255 字符
-          示例值: "步骤名称"
-        example: 步骤名称
-        maxLength: 255
-        minLength: 1
-        type: string
-      stepOrder:
-        description: |-
-          StepOrder int 排序(从大到小)
-          必填，实验步骤的执行排序(从大到小)，必须为正整数
-          示例值: 1
-        example: 1
-        minimum: 1
-        type: integer
-    required:
-    - recipeId
-    - resultValue
-    - stepName
-    - stepOrder
-    type: object
-  data.ExperimentStepData:
-    properties:
-      experimentCondition:
-        description: |-
-          ExperimentCondition string 实验条件
-          步骤对应的实验条件描述
-        example: 实验条件
-        type: string
-      recipeId:
-        description: |-
-          RecipeID string 配方ID
-          配方的UUID
-        example: 123e4567-e89b-12d3-a456-426614174002
-        type: string
       resultValue:
         description: |-
           ResultValue string 实验条件
           步骤对应的实验结果
+          resin_mixing=树脂混合 {"树脂粘度":{"温度":27,"粘度":1350},"环氧当量":26}
+          hardener_mixing=固化剂混合 {"胺值":9.5,"固化剂粘度":{"温度":27,"粘度":null}}
+          resin_hardener_mixing=树脂/固化剂混合 {"温度":"27℃","可用时间":140,"混合粘度":276}
+          mechanical_performance=力学性能 {"value": 79}
         example: 步骤结果值
+        type: string
+      stepCategory:
+        description: |-
+          StepCategory 实验步骤类别
+          实验步骤的类型，包含 'resin_mixing'、'hardener_mixing'、'resin_hardener_mixing'、'mechanical_performance'
+        example: resin_mixing
+        type: string
+      stepCondition:
+        description: |-
+          StepCondition string 实验条件
+          步骤对应的实验条件描述
+        example: 步骤实验条件
         type: string
       stepId:
         description: |-
@@ -402,162 +438,15 @@ definitions:
           描述实验步骤的名称
         example: 步骤名称
         type: string
-      stepNameDescription:
-        description: |-
-          StepNameDescription string 实验步骤描述
-          实验步骤描述
-        example: 实验步骤描述
-        type: string
-      stepOrder:
-        description: |-
-          StepOrder int 排序(从大到小)
-          实验步骤的执行排序(从大到小)
-          示例值: 1
-        example: 1
-        minimum: 1
-        type: integer
-    required:
-    - stepOrder
-    type: object
-  data.ExperimentStepUpdate:
-    properties:
-      experimentCondition:
-        description: |-
-          ExperimentCondition string 实验条件
-          选填，实验步骤的实验条件描述，最长 255 字符
-          示例值: "实验条件"
-        example: 实验条件
-        maxLength: 255
-        type: string
-      recipeId:
-        description: |-
-          RecipeID string 配方ID
-          配方的UUID
-        example: 123e4567-e89b-12d3-a456-426614174002
-        type: string
-      resultValue:
-        description: |-
-          ResultValue string 步骤结果值
-          选填，实验步骤的结果值，最长 256 字符
-          示例值: "步骤结果值"
-        example: 步骤结果值
-        maxLength: 256
-        type: string
-      stepName:
-        description: |-
-          StepName string 步骤名称
-          实验步骤的名称，必填，限制长度为 1-255 字符
-          示例值: "步骤名称"
-        example: 步骤名称
-        maxLength: 255
-        minLength: 1
-        type: string
-      stepOrder:
-        description: |-
-          StepOrder int 排序(从大到小)
-          必填，实验步骤的执行排序(从大到小)，必须为正整数
-          示例值: 1
-        example: 1
-        minimum: 1
-        type: integer
-    required:
-    - recipeId
-    - resultValue
-    - stepName
-    - stepOrder
-    type: object
-  data.ExperimentUpdateRequest:
-    properties:
-      endTime:
-        description: |-
-          EndTime string 实验结束时间
-          选填，格式为 "2006-01-02T15:04:05Z"（RFC3339 格式）
-          示例值: "2024-02-05T18:00:00Z"
-        example: "2024-02-05T18:00:00Z"
-        type: string
-      experimentId:
-        description: |-
-          ExperimentID string 实验ID
-          唯一标识实验的 UUID，必填，用于确定要更新的实验记录
-          示例值: "123e4567-e89b-12d3-a456-426614174000"
-        example: 123e4567-e89b-12d3-a456-426614174000
-        type: string
-      experimentName:
-        description: |-
-          ExperimentName string 实验名称
-          实验的名称，选填；如果填写，名称长度限制为 2-128 字符
-          支持中文、英文、数字及特殊字符
-          示例值: "实验名称"
-        example: 实验名称
-        maxLength: 128
-        minLength: 2
-        type: string
-      experimenter:
-        description: |-
-          Experimenter string 实验者
-          实验的负责人，选填；如果填写，名称长度限制为 1-128 字符
-          示例值: "张三"
-        example: 张三
-        maxLength: 128
-        minLength: 1
-        type: string
-      startTime:
-        description: |-
-          StartTime string 实验开始时间
-          选填，格式为 "2006-01-02T15:04:05Z"（RFC3339 格式）
-          示例值: "2024-02-05T08:30:00Z"
-        example: "2024-02-05T08:30:00Z"
-        type: string
-      steps:
-        description: |-
-          Steps []ExperimentStepUpdate 实验步骤列表
-          选填，包含该实验的所有步骤信息，每个步骤包含名称、描述、实验条件、结果值及材料组等
-          示例值: [{"stepName": "步骤名称", "stepNameDescription": "实验步骤描述", "experimentCondition": "实验条件", "resultValue": "步骤结果值", "materialGroups": []}]
-        items:
-          $ref: '#/definitions/data.ExperimentStepUpdate'
-        type: array
-    required:
-    - experimentId
-    type: object
-  data.MaterialData:
-    properties:
-      materialName:
-        description: |-
-          MaterialName string 材料名称
-          材料的名称信息
-        example: 材料名称
-        type: string
-      percentage:
-        description: |-
-          Percentage float64 材料占比
-          材料在材料组中的占比，百分比形式
-        example: 60
-        type: number
-    type: object
-  data.MaterialGroupData:
-    properties:
-      materialGroupName:
-        description: |-
-          MaterialGroupName string 材料组名称
-          材料组的名称信息
-        example: 材料组名称
-        type: string
-      materials:
-        description: |-
-          Materials []MaterialData 材料列表
-          材料组内的具体材料信息
-        items:
-          $ref: '#/definitions/data.MaterialData'
-        type: array
-      proportion:
-        description: |-
-          Proportion float64 材料组占比
-          材料组在实验步骤中的占比，百分比形式
-        example: 25.5
-        type: number
     type: object
   data.MaterialGroupInfo:
     properties:
+      materialGroupCategory:
+        description: |-
+          MaterialGroupCategory string 材料组类别
+          材料组类别 resin=树脂, hardener=固化剂
+        example: 材料组类别
+        type: string
       materialGroupId:
         description: |-
           MaterialGroupID string 材料组ID
@@ -577,12 +466,25 @@ definitions:
         items:
           $ref: '#/definitions/data.MaterialInfo'
         type: array
+      parentId:
+        description: |-
+          MaterialGroupParentID string 材料组父级ID 顶级材料组为空
+          唯一标识材料组父级的UUID
+        example: 123e4567-e89b-12d3-a456-426614174003
+        type: string
       proportion:
         description: |-
           Proportion float64 材料组占比
           材料组在实验步骤中的占比，百分比形式
         example: 25.5
         type: number
+      subGroups:
+        description: |-
+          SubGroups []MaterialGroupInfo 子材料组
+          当前材料组包含的子材料组列表，支持层级嵌套
+        items:
+          $ref: '#/definitions/data.MaterialGroupInfo'
+        type: array
     type: object
   data.MaterialInfo:
     properties:
@@ -605,138 +507,85 @@ definitions:
         example: 60
         type: number
     type: object
-  data.RecipeAddRequest:
+  data.TaskData:
     properties:
-      materialGroups:
+      aiFilePath:
         description: |-
-          MaterialGroupData []MaterialGroupData 材料组列表
-          选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)
-          示例值: [{"materialGroupName": "材料组名称", "proportion": 25.5, "materials": []}]
-        items:
-          $ref: '#/definitions/data.MaterialGroupData'
-        type: array
-      recipeName:
-        description: |-
-          RecipeName string 配方名称，选填，长度限制：2-255字符
-          用于按名称模糊查询实验记录
-        example: 配方名称
-        maxLength: 255
-        minLength: 2
+          AiFilePath string ai处理后json文件路径
+          AI 处理后的 JSON 文件存储路径
+        example: /uploads/2024/11/240628AI模型数据200组 含FRP性能-(对外）FD-ai.json
         type: string
-      sort:
+      batchId:
         description: |-
-          Sort int 排序 优先级从大到小
-          选填，必须是大于等于 0 的整数
-          示例值: 1
-        example: 1
-        minimum: 0
-        type: integer
-    type: object
-  data.RecipeData:
-    properties:
+          BatchID string 批次号
+          用于标识一组相关任务的批次UUID
+        example: 987e6543-e89b-12d3-a456-426614174001
+        type: string
       createdAt:
         description: |-
-          CreatedAt 创建时间
-          格式为时间戳，创建时间
-        example: "2024-11-18T10:00:00Z"
+          CreatedAt string 创建时间
+          任务的创建时间，格式 2006-01-02 15:04:05
+        example: "2006-01-02 15:04:05"
         type: string
-      errMsg:
+      fileName:
         description: |-
-          ErrMsg string 错误信息
-          当 isErr 为 true 时，该字段包含具体的错误描述信息
-        example: The proportion of the material group is not 100%
+          FileName string 文件名称
+          任务关联的文件名称
+        example: 240628AI模型数据200组 含FRP性能-(对外）FD
         type: string
-      isErr:
+      filePath:
         description: |-
-          IsErr bool 是否发生错误
-          表示该配方数据处理过程中是否出现错误，true 表示有错误，false 表示无错误
-        example: false
-        type: boolean
-      materialGroups:
-        description: |-
-          MaterialGroups []MaterialGroupInfo 材料组
-          该步骤中涉及的材料组信息
-        items:
-          $ref: '#/definitions/data.MaterialGroupInfo'
-        type: array
-      recipeId:
-        description: |-
-          RecipeId string 配方id
-          UUID
-        example: id
+          FilePath string 文件路径
+          存储文件的路径，指向文件在服务器上的位置
+        example: /uploads/2024/11/240628AI模型数据200组 含FRP性能-(对外）FD.json
         type: string
-      recipeName:
+      jsonFilePath:
         description: |-
-          RecipeName string 配方名称
-          配方名称信息
-        example: 配方名称
+          JSONFilePath string 硬代码json文件路径
+          JSON 文件存储的路径
+        example: /uploads/2024/11/240628AI模型数据200组 含FRP性能-(对外）FD.json
         type: string
-      recipeUsedInExperimentNum:
+      remark:
         description: |-
-          RecipeUsedInExperimentNum int64
-          配方被实验使用数
-        example: 11
-        type: integer
-      sort:
+          Remark string 任务状态描述
+          对任务状态的额外描述信息，如错误信息等
+        example: 任务正在处理中
+        type: string
+      status:
         description: |-
-          Sort int
-          排序 优先级从大到小
-        example: 1
-        type: integer
+          Status string 任务状态
+          当前任务的处理状态，pending=待处理, processing=处理中, success=成功, failure=失败
+        example: pending
+        type: string
+      taskId:
+        description: |-
+          TaskID string 任务ID
+          唯一标识任务的UUID
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      updatedAt:
+        description: |-
+          UpdatedAt string 修改时间
+          任务的最后更新时间，采用 ISO 8601 格式（例如：2024-11-18T12:00:00Z）
+        example: "2024-11-18T12:00:00Z"
+        type: string
     type: object
-  data.RecipeDeleteRequest:
+  data.TaskListRequest:
     properties:
-      recipeId:
+      endTime:
         description: |-
-          RecipeId 是配方的唯一标识符
-          必填字段，格式为 UUID v4
-          示例值: "123e4567-e89b-12d3-a456-426614174000"
-        example: 配方id
+          EndTime string 结束时间
+          任务的创建时间，格式 2006-01-02 15:04:05
+        example: "2006-01-02 15:04:05"
         type: string
-    required:
-    - recipeId
-    type: object
-  data.RecipeEditRequest:
-    properties:
-      materialGroups:
+      fileName:
         description: |-
-          MaterialGroupData []MaterialGroupData 材料组列表
-          选填，实验步骤中涉及的材料组信息, percentage的和为100(占比100%)
-          示例值: [{"materialGroupName": "材料组名称", "proportion": 25.5, "materials": []}]
-        items:
-          $ref: '#/definitions/data.MaterialGroupInfo'
-        type: array
-      recipeId:
-        description: |-
-          RecipeId 是配方的唯一标识符
-          必填字段，格式为 UUID v4
-          示例值: "123e4567-e89b-12d3-a456-426614174000"
-        example: 配方id
-        type: string
-      recipeName:
-        description: |-
-          RecipeName string 配方名称，选填，长度限制：2-255字符
-          用于按名称模糊查询实验记录
-        example: 配方名称
-        maxLength: 255
+          FileName string 文件名称，选填，长度限制：2-128字符
+          用于按文件名称模糊查询任务记录
+        example: 文件名称
+        maxLength: 128
         minLength: 2
         type: string
-      sort:
-        description: |-
-          Sort int 排序 优先级从大到小
-          选填，必须是大于等于 0 的整数
-          示例值: 1
-        example: 1
-        minimum: 0
-        type: integer
-    required:
-    - materialGroups
-    - recipeId
-    - recipeName
-    - sort
-    type: object
-  data.RecipeFormListRequest:
-    properties:
       page:
         description: |-
           Page 页码，选填，范围限制：[1,10000]
@@ -753,132 +602,37 @@ definitions:
         maximum: 10000
         minimum: 1
         type: integer
-      recipeName:
+      startTime:
         description: |-
-          RecipeName 是一个可选的字符串字段，用于按配方名称进行模糊查询。
-          该字段的长度必须在 2 到 255 个字符之间。如果不提供该字段，则不进行名称过滤。
-          示例值："配方名称"，系统会查找名称中包含该字符串的所有配方记录。
-        example: 配方名称
-        maxLength: 255
-        minLength: 2
+          StartTime string 开始时间
+          任务的创建时间，格式 2006-01-02 15:04:05
+        example: "2006-01-02 15:04:05"
+        type: string
+      status:
+        description: |-
+          Status string 任务状态
+          当前任务的处理状态，pending=待处理, processing=处理中, success=成功, failure=失败
+        enum:
+        - pending
+        - processing
+        - success
+        - failure
+        example: pending
         type: string
     type: object
-  data.RecipeFormListResponse:
+  data.TaskListResponse:
     properties:
       list:
         description: |-
-          List 是一个 RecipeInfo 类型的切片，用于存储分页返回的配方记录列表。
-          例如，列表中可能包含多个不同配方的信息，前端可以根据这些信息展示配方列表。
+          List []TaskData 数据
+          分页返回的任务记录列表
         items:
-          $ref: '#/definitions/data.RecipeInfo'
-        type: array
-      total:
-        description: |-
-          Total 表示符合查询条件的配方记录的总条数。
-          示例值："100"，表示共有 100 条记录符合查询条件。
-        example: 100
-        type: integer
-    type: object
-  data.RecipeInfo:
-    properties:
-      id:
-        description: |-
-          Id 是配方的唯一标识符，通常为 UUID 格式的字符串。
-          示例值: "123e4567-e89b-12d3-a456-426614174000"
-        type: string
-      name:
-        description: |-
-          Name 是配方的名称，用于描述该配方的内容或用途。
-          示例值: "实验名称"
-        type: string
-    type: object
-  data.RecipeInfoRequest:
-    properties:
-      recipeId:
-        description: |-
-          RecipeId 是配方的唯一标识符
-          必填字段，格式为 UUID v4
-          示例值: "123e4567-e89b-12d3-a456-426614174000"
-        example: 配方id
-        type: string
-    required:
-    - recipeId
-    type: object
-  data.RecipeInfoResponse:
-    properties:
-      createdAt:
-        description: |-
-          CreatedAt 表示配方的创建时间
-          时间格式为 ISO 8601 格式的 UTC 时间戳
-          示例值: "2024-11-18T10:00:00Z"
-        example: "2024-11-18T10:00:00Z"
-        type: string
-      materialGroups:
-        description: |-
-          MaterialGroups 包含与该配方关联的材料组信息
-          每个材料组都包含详细的材料信息
-        items:
-          $ref: '#/definitions/data.MaterialGroupInfo'
-        type: array
-      recipeBasedExperiment:
-        description: RecipeBasedExperiment 包含基于此配方创建的实验信息列表
-        items:
-          $ref: '#/definitions/data.ExperimentInfo'
-        type: array
-      recipeId:
-        description: |-
-          RecipeId string 配方id
-          UUID
-        example: id
-        type: string
-      recipeName:
-        description: |-
-          RecipeName 表示配方的名称
-          返回配方的名称信息
-          示例值: "配方名称"
-        example: 配方名称
-        type: string
-    type: object
-  data.RecipeListRequest:
-    properties:
-      page:
-        description: |-
-          Page 页码，选填，范围限制：[1,10000]
-          用于分页查询管理员列表，最小值为1，最大值为10000
-        example: 1
-        maximum: 10000
-        minimum: 1
-        type: integer
-      pageSize:
-        description: |-
-          PageSize 每页大小，选填，范围限制：[1,10000]
-          用于限制每页返回的管理员数量，最小值为1，最大值为10000
-        example: 10
-        maximum: 10000
-        minimum: 1
-        type: integer
-      recipeName:
-        description: |-
-          RecipeName string 配方名称，选填，长度限制：2-255字符
-          用于按名称查询配方列表 前缀模糊匹配
-        example: 配方名称
-        maxLength: 255
-        minLength: 2
-        type: string
-    type: object
-  data.RecipeListResponse:
-    properties:
-      list:
-        description: |-
-          List []RecipeData 数据
-          分页返回的配方列表
-        items:
-          $ref: '#/definitions/data.RecipeData'
+          $ref: '#/definitions/data.TaskData'
         type: array
       total:
         description: |-
           Total int64 总条数
-          返回符合条件的实验记录总数
+          返回符合条件的任务记录总数
         example: 100
         type: integer
     type: object
@@ -1019,80 +773,81 @@ paths:
       summary: 获取实验列表
       tags:
       - 实验管理
-    post:
+  /data/experiment/info:
+    get:
       consumes:
       - application/json
-      description: 根据提供的实验信息创建新的实验记录
+      description: 根据实验ID获取实验的详细信息
       parameters:
-      - description: 请求参数，包含新的实验信息
+      - description: 请求参数，包含实验ID
         in: body
         name: req
         required: true
         schema:
-          $ref: '#/definitions/data.ExperimentAddRequest'
+          $ref: '#/definitions/data.ExperimentInfoRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: 成功添加实验信息
+          description: 成功返回实验详情
           schema:
-            $ref: '#/definitions/dto.Empty'
+            $ref: '#/definitions/data.ExperimentInfoResponse'
         "400":
-          description: 请求参数错误，如缺少必要字段或格式不正确
+          description: 请求参数错误，如实验ID不存在或格式无效
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
         "500":
-          description: 服务器内部错误，可能是数据库插入失败等情况
+          description: 服务器内部错误，可能是查询失败等情况
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: 添加新的实验信息
+      summary: 获取指定实验的详情信息
       tags:
       - 实验管理
-    put:
+  /data/task:
+    get:
       consumes:
       - application/json
-      description: 根据实验ID修改实验的具体信息
+      description: 支持分页查询任务列表，可按任务名称筛选
       parameters:
-      - description: 请求参数，包含实验ID及要修改的具体内容
+      - description: 分页参数及筛选条件
         in: body
         name: req
         required: true
         schema:
-          $ref: '#/definitions/data.ExperimentUpdateRequest'
+          $ref: '#/definitions/data.TaskListRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: 成功修改实验信息
+          description: 成功返回任务列表
           schema:
-            $ref: '#/definitions/dto.Empty'
+            $ref: '#/definitions/data.TaskListResponse'
         "400":
-          description: 请求参数错误，如实验ID不存在或修改内容无效
+          description: 请求参数错误，如分页参数错误、筛选条件不符合要求
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
         "500":
-          description: 服务器内部错误，可能是数据库更新失败等情况
+          description: 服务器内部错误，可能是数据库查询失败
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: 修改实验信息
+      summary: 获取任务列表
       tags:
-      - 实验管理
-  /data/experiment/import:
+      - 任务管理
     post:
       consumes:
       - multipart/form-data
-      description: 接收上传的文件并处理，根据业务需求进行相关文件解析和导入
+      description: 接收并存储上传的任务文件，支持多文件上传，限制最大 100MB/文件，最多 20 个文件
       parameters:
-      - description: 上传的文件
+      - description: 上传的文件，支持多个
         in: formData
-        name: file
+        name: files
         required: true
         type: file
       produces:
       - application/json
       responses:
         "200":
-          description: 文件导入成功，返回空对象表示操作成功
+          description: 文件上传成功
           schema:
             $ref: '#/definitions/dto.Empty'
         "400":
@@ -1100,189 +855,12 @@ paths:
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
         "500":
-          description: 服务器内部错误，可能是文件解析或存储过程中出现异常
+          description: 服务器内部错误，可能是文件解析或存储失败
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: 导入文件
+      summary: 上传任务文件
       tags:
-      - 实验管理
-  /data/recipe:
-    delete:
-      consumes:
-      - application/json
-      description: 根据配方ID删除指定的配方记录
-      parameters:
-      - description: 请求参数，包含需要删除的配方ID
-        in: body
-        name: req
-        required: true
-        schema:
-          $ref: '#/definitions/data.RecipeDeleteRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功删除配方信息
-          schema:
-            $ref: '#/definitions/dto.Empty'
-        "400":
-          description: 请求参数错误，可能是配方ID无效
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "500":
-          description: 服务器内部错误，可能是数据库删除失败等情况
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: 删除配方
-      tags:
-      - 配方管理
-    get:
-      consumes:
-      - application/json
-      description: 根据分页请求获取配方列表，支持按配方名称进行筛选
-      parameters:
-      - description: 请求参数，包含分页信息及筛选条件
-        in: body
-        name: req
-        required: true
-        schema:
-          $ref: '#/definitions/data.RecipeListRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功获取配方列表，返回配方数据
-          schema:
-            $ref: '#/definitions/data.RecipeListResponse'
-        "400":
-          description: 请求参数错误，如分页参数错误、筛选条件不符合要求
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "500":
-          description: 服务器内部错误，可能是数据库查询失败等情况
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: 获取配方列表
-      tags:
-      - 配方管理
-    post:
-      consumes:
-      - application/json
-      description: 根据提供的配方信息创建新的配方记录
-      parameters:
-      - description: 请求参数，包含新的配方信息
-        in: body
-        name: req
-        required: true
-        schema:
-          $ref: '#/definitions/data.RecipeAddRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功添加配方信息
-          schema:
-            $ref: '#/definitions/dto.Empty'
-        "400":
-          description: 请求参数错误，如缺少必要字段或格式不正确
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "500":
-          description: 服务器内部错误，可能是数据库插入失败等情况
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: 添加新的配方
-      tags:
-      - 配方管理
-    put:
-      consumes:
-      - application/json
-      description: 根据提供的配方信息更新现有配方记录，更新时确保材料组和材料百分比的比例和为100%
-      parameters:
-      - description: 请求参数，包含更新的配方信息
-        in: body
-        name: req
-        required: true
-        schema:
-          $ref: '#/definitions/data.RecipeEditRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功更新配方信息
-          schema:
-            $ref: '#/definitions/dto.Empty'
-        "400":
-          description: 请求参数错误，如缺少必要字段或格式不正确
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "500":
-          description: 服务器内部错误，可能是数据库更新失败等情况
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: 编辑现有配方
-      tags:
-      - 配方管理
-  /data/recipe/form/list:
-    get:
-      consumes:
-      - application/json
-      description: 根据分页请求获取配方表单列表，支持按配方名称进行筛选
-      parameters:
-      - description: 请求参数，包含分页信息及筛选条件
-        in: body
-        name: req
-        required: true
-        schema:
-          $ref: '#/definitions/data.RecipeFormListRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功获取配方表单列表，返回配方数据
-          schema:
-            $ref: '#/definitions/data.RecipeFormListResponse'
-        "400":
-          description: 请求参数错误，如分页参数错误、筛选条件不符合要求
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "500":
-          description: 服务器内部错误，可能是数据库查询失败等情况
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: 获取配方表单列表
-      tags:
-      - 配方管理
-  /data/recipe/info:
-    get:
-      consumes:
-      - application/json
-      description: 根据传入的配方 ID 获取该配方的详细信息，包括材料组、材料信息以及基于此配方创建的实验信息
-      parameters:
-      - description: 请求参数，包含要查询的配方 ID
-        in: body
-        name: req
-        required: true
-        schema:
-          $ref: '#/definitions/data.RecipeInfoRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功获取单个配方详情，返回配方详细数据
-          schema:
-            $ref: '#/definitions/data.RecipeInfoResponse'
-        "400":
-          description: 请求参数错误，如配方 ID 格式错误等
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "500":
-          description: 服务器内部错误，可能是数据库查询失败等情况
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: 获取单个配方详情
-      tags:
-      - 配方管理
+      - 任务管理
   /login:
     post:
       consumes:

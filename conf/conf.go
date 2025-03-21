@@ -13,9 +13,10 @@ type Server struct {
 	Jwt    Jwt    `mapstructure:"jwt" json:"jwt" yaml:"jwt"`
 	Mysql  Mysql  `mapstructure:"mysql" json:"mysql" yaml:"mysql"`
 	Redis  Redis  `mapstructure:"redis" json:"redis" yaml:"redis"`
+	Gpt    Gpt    `mapstructure:"gpt" json:"gpt" yaml:"gpt"`
+	File   File   `mapstructure:"file" json:"file" yaml:"file"`
 }
 
-// System 系统设置
 // System 系统配置
 type System struct {
 	Env      string   `mapstructure:"env" json:"env" yaml:"env"`                // 环境
@@ -89,6 +90,18 @@ type Redis struct {
 type Jwt struct {
 	AccessSecret string `mapstructure:"accessSecret" json:"accessSecret" yaml:"accessSecret"`
 	AccessExpire int64  `mapstructure:"accessExpire" json:"accessExpire" yaml:"accessExpire"`
+}
+
+// Gpt ai
+type Gpt struct {
+	ApiKey   string `mapstructure:"ApiKey" json:"apiKey" yaml:"ApiKey"`
+	Endpoint string `mapstructure:"Endpoint" json:"endpoint" yaml:"Endpoint"`
+	Model    string `mapstructure:"Model" json:"model" yaml:"Model"`
+}
+
+// File 文件配置
+type File struct {
+	TaskPath string `mapstructure:"taskPath" json:"taskPath" yaml:"taskPath"`
 }
 
 var GlobalConf *Server

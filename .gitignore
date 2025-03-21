@@ -3,6 +3,8 @@
 *.exe
 .env
 
+conf.*.yaml
+
 # Docker data volumes
 docker-data/
 

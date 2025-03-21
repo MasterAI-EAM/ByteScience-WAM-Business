@@ -39,7 +39,7 @@ func (md *MaterialDao) GetByID(ctx context.Context, id string) (*entity.Material
 func (md *MaterialDao) GetByGroupID(ctx context.Context, groupID string) ([]*entity.Materials, error) {
 	var Materialss []*entity.Materials
 	err := db.Client.WithContext(ctx).
-		Where(entity.MaterialsColumns.ExperimentMaterialGroupID+" = ?", groupID).
+		Where(entity.MaterialsColumns.MaterialGroupID+" = ?", groupID).
 		Order(entity.MaterialsColumns.MaterialName + " ASC").
 		Find(&Materialss).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -67,14 +67,14 @@ func (md *MaterialDao) DeleteByID(ctx context.Context, id string) error {
 // DeleteByGroupID 删除某个材料组内的所有材料
 func (md *MaterialDao) DeleteByGroupID(ctx context.Context, groupID string) error {
 	return db.Client.WithContext(ctx).
-		Where(entity.MaterialsColumns.ExperimentMaterialGroupID+" = ?", groupID).
+		Where(entity.MaterialsColumns.MaterialGroupID+" = ?", groupID).
 		Delete(&entity.Materials{}).Error
 }
 
 // DeleteByGroupIdListTx 删除某个材料组内的所有材料
 func (md *MaterialDao) DeleteByGroupIdListTx(ctx context.Context, tx *gorm.DB, groupIdList []string) error {
 	return tx.WithContext(ctx).
-		Where(entity.MaterialsColumns.ExperimentMaterialGroupID+" in ?", groupIdList).
+		Where(entity.MaterialsColumns.MaterialGroupID+" in ?", groupIdList).
 		Delete(&entity.Materials{}).Error
 }
 
@@ -106,7 +106,7 @@ func (md *MaterialDao) Query(ctx context.Context, page int, pageSize int,
 
 	// 分页查询
 	if err := query.Scopes(db.PageScope(page, pageSize)).
-		Order(entity.MaterialsColumns.CreatedAt + " DESC").
+		Order(entity.MaterialsColumns.Sort + " DESC").
 		Find(&Materialss).Error; err != nil {
 		return nil, 0, err
 	}

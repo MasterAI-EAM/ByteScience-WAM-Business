@@ -5,8 +5,6 @@ import (
 	"ByteScience-WAM-Business/pkg/db"
 	"context"
 	"errors"
-	"time"
-
 	"gorm.io/gorm"
 )
 
@@ -16,11 +14,6 @@ type PathDao struct{}
 // NewPathDao 创建 PathDao 实例
 func NewPathDao() *PathDao {
 	return &PathDao{}
-}
-
-// Insert 插入路径记录
-func (pd *PathDao) Insert(ctx context.Context, path *entity.Paths) error {
-	return db.Client.WithContext(ctx).Create(path).Error
 }
 
 // GetByID 根据 ID 获取路径
@@ -44,24 +37,6 @@ func (pd *PathDao) GetByMenuID(ctx context.Context, menuID string) ([]*entity.Pa
 		Where(entity.PathsColumns.DeletedAt + " IS NULL").
 		Find(&paths).Error
 	return paths, err
-}
-
-// Update 更新路径信息
-func (pd *PathDao) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Paths{}).
-		Where(entity.PathsColumns.ID+" = ?", id).
-		Updates(updates).
-		Error
-}
-
-// SoftDelete 软删除路径记录
-func (pd *PathDao) SoftDelete(ctx context.Context, id string) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Paths{}).
-		Where(entity.PathsColumns.ID+" = ?", id).
-		Update(entity.PathsColumns.DeletedAt, time.Now()).
-		Error
 }
 
 // Query 分页查询路径

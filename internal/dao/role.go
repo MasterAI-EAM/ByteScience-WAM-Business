@@ -1,12 +1,10 @@
 package dao
 
 import (
+	"ByteScience-WAM-Business/internal/model/entity"
 	"ByteScience-WAM-Business/pkg/db"
 	"context"
 	"errors"
-	"time"
-
-	"ByteScience-WAM-Business/internal/model/entity"
 	"gorm.io/gorm"
 )
 
@@ -16,16 +14,6 @@ type RoleDao struct{}
 // NewRoleDao 创建一个新的 RoleDao 实例
 func NewRoleDao() *RoleDao {
 	return &RoleDao{}
-}
-
-// Insert 插入角色记录
-func (rd *RoleDao) Insert(ctx context.Context, role *entity.Roles) error {
-	return db.Client.WithContext(ctx).Create(role).Error
-}
-
-// InsertTx 在事务中插入角色
-func (rd *RoleDao) InsertTx(ctx context.Context, tx *gorm.DB, role *entity.Roles) error {
-	return tx.WithContext(ctx).Create(role).Error
 }
 
 // GetByID 根据 ID 获取角色
@@ -52,42 +40,6 @@ func (rd *RoleDao) GetByName(ctx context.Context, name string) (*entity.Roles, e
 		return nil, nil
 	}
 	return &role, err
-}
-
-// Update 更新角色信息
-func (rd *RoleDao) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Roles{}).
-		Where(entity.RolesColumns.ID+" = ?", id).
-		Updates(updates).
-		Error
-}
-
-// UpdateTx 在事务中更新角色信息
-func (rd *RoleDao) UpdateTx(ctx context.Context, tx *gorm.DB, id string, updates map[string]interface{}) error {
-	return tx.WithContext(ctx).
-		Model(&entity.Roles{}).
-		Where(entity.RolesColumns.ID+" = ?", id).
-		Updates(updates).
-		Error
-}
-
-// SoftDeleteByID 软删除角色记录
-func (rd *RoleDao) SoftDeleteByID(ctx context.Context, id string) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Roles{}).
-		Where(entity.RolesColumns.ID+" = ?", id).
-		Update(entity.RolesColumns.DeletedAt, time.Now()).
-		Error
-}
-
-// SoftDeleteByIDTx 软删除角色记录
-func (rd *RoleDao) SoftDeleteByIDTx(ctx context.Context, tx *gorm.DB, id string) error {
-	return tx.WithContext(ctx).
-		Model(&entity.Roles{}).
-		Where(entity.RolesColumns.ID+" = ?", id).
-		Update(entity.RolesColumns.DeletedAt, time.Now()).
-		Error
 }
 
 // Query 分页查询角色
@@ -124,13 +76,4 @@ func (rd *RoleDao) Query(ctx context.Context, page int, pageSize int, filters ma
 	}
 
 	return roles, total, nil
-}
-
-// UpdateStatus 更新角色的状态
-func (rd *RoleDao) UpdateStatus(ctx context.Context, id string, status int) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Roles{}).
-		Where(entity.RolesColumns.ID+" = ?", id).
-		Update(entity.RolesColumns.Status, status).
-		Error
 }

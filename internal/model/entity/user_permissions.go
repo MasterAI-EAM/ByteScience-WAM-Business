@@ -12,8 +12,8 @@ CREATE TABLE `user_permissions` (
 ******sql******/
 // UserPermissions 用户权限预计算表
 type UserPermissions struct {
-	UserID string `gorm:"primaryKey;column:user_id;type:char(36);not null" json:"userId"`               // 用户ID
-	PathID string `gorm:"primaryKey;index:path_id;column:path_id;type:char(36);not null" json:"pathId"` // 路径ID
+	UserID string `gorm:"primaryKey;column:user_id;type:char(36);not null"`               // 用户ID
+	PathID string `gorm:"primaryKey;index:path_id;column:path_id;type:char(36);not null"` // 路径ID
 }
 
 // TableName get sql table name.获取数据库表名

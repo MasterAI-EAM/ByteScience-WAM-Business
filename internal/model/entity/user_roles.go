@@ -12,8 +12,8 @@ CREATE TABLE `user_roles` (
 ******sql******/
 // UserRoles 用户与角色关联表
 type UserRoles struct {
-	UserID string `gorm:"primaryKey;column:user_id;type:char(36);not null" json:"userId"`               // 用户ID
-	RoleID string `gorm:"primaryKey;index:role_id;column:role_id;type:char(36);not null" json:"roleId"` // 角色ID
+	UserID string `gorm:"primaryKey;column:user_id;type:char(36);not null"`               // 用户ID
+	RoleID string `gorm:"primaryKey;index:role_id;column:role_id;type:char(36);not null"` // 角色ID
 }
 
 // TableName get sql table name.获取数据库表名

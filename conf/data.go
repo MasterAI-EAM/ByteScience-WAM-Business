@@ -36,3 +36,15 @@ var StepNameData = map[string]string{
 	"I15": "V剪模量Gpa",
 	"I16": "V剪应变%",
 }
+
+const (
+	Login            = "login"
+	ChangPassword    = "changPassword"
+	ImportExperiment = "importExperiment"
+	AddExperiment    = "addExperiment"
+	EditExperiment   = "editExperiment"
+	DeleteExperiment = "deleteExperiment"
+	AddRecipe        = "addRecipe"
+	EditRecipe       = "editRecipe"
+	DeleteRecipe     = "deleteRecipe"
+)

@@ -21,13 +21,59 @@ func NewUserDao() *UserDao {
 }
 
 // Insert 插入用户记录
-func (ud *UserDao) Insert(ctx context.Context, user *entity.Users) error {
-	return db.Client.WithContext(ctx).Create(user).Error
+func (ud *UserDao) Insert(ctx context.Context, tx *gorm.DB, user *entity.Users) error {
+	if tx == nil {
+		tx = db.Client
+	}
+	return tx.WithContext(ctx).Create(user).Error
 }
 
-// InsertTx 插入用户记录
-func (ud *UserDao) InsertTx(ctx context.Context, tx *gorm.DB, user *entity.Users) error {
-	return tx.WithContext(ctx).Create(user).Error
+// UpdateStatus 更新用户状态
+func (ud *UserDao) UpdateStatus(ctx context.Context, tx *gorm.DB, id string, status int) error {
+	if tx == nil {
+		tx = db.Client
+	}
+	return tx.WithContext(ctx).
+		Model(&entity.Users{}).
+		Where(entity.UsersColumns.ID+" = ?", id).
+		Update(entity.UsersColumns.Status, status).
+		Error
+}
+
+// Update 更新用户信息
+func (ud *UserDao) Update(ctx context.Context, tx *gorm.DB, id string, updates map[string]interface{}) error {
+	if tx == nil {
+		tx = db.Client
+	}
+	return tx.WithContext(ctx).
+		Model(&entity.Users{}).
+		Where(entity.UsersColumns.ID+" = ?", id).
+		Updates(updates).
+		Error
+}
+
+// SoftDeleteByID 软删除用户记录
+func (ud *UserDao) SoftDeleteByID(ctx context.Context, tx *gorm.DB, id string) error {
+	if tx == nil {
+		tx = db.Client
+	}
+	return tx.WithContext(ctx).
+		Model(&entity.Users{}).
+		Where(entity.UsersColumns.ID+" = ?", id).
+		Update(entity.UsersColumns.DeletedAt, time.Now()).
+		Error
+}
+
+// UpdateLastLoginTime 更新管理员的最后登录时间
+func (ud *UserDao) UpdateLastLoginTime(ctx context.Context, tx *gorm.DB, id string) error {
+	if tx == nil {
+		tx = db.Client
+	}
+	return tx.WithContext(ctx).
+		Model(&entity.Admins{}).
+		Where(entity.AdminsColumns.ID+" = ?", id).
+		Update(entity.AdminsColumns.LastLoginAt, time.Now()).
+		Error
 }
 
 // GetByID 根据 ID 获取用户
@@ -41,6 +87,19 @@ func (ud *UserDao) GetByID(ctx context.Context, id string) (*entity.Users, error
 		return nil, nil
 	}
 	return &user, err
+}
+
+// GetByIDs 根据 ID 获取用户
+func (ud *UserDao) GetByIDs(ctx context.Context, ids []string) ([]entity.Users, error) {
+	var users []entity.Users
+	err := db.Client.WithContext(ctx).
+		Where(entity.UsersColumns.ID+" in ?", ids).
+		Where(entity.UsersColumns.DeletedAt + " IS NULL").
+		First(&users).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return users, err
 }
 
 // GetByFields 根据字段（用户名、邮箱、手机号）获取用户
@@ -75,42 +134,6 @@ func (ud *UserDao) GetByFields(ctx context.Context, username, email, phone strin
 		return nil, nil
 	}
 	return &user, err
-}
-
-// Update 更新用户信息
-func (ud *UserDao) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Users{}).
-		Where(entity.UsersColumns.ID+" = ?", id).
-		Updates(updates).
-		Error
-}
-
-// UpdateTx 更新用户信息
-func (ud *UserDao) UpdateTx(ctx context.Context, tx *gorm.DB, id string, updates map[string]interface{}) error {
-	return tx.WithContext(ctx).
-		Model(&entity.Users{}).
-		Where(entity.UsersColumns.ID+" = ?", id).
-		Updates(updates).
-		Error
-}
-
-// SoftDeleteByID 软删除用户记录
-func (ud *UserDao) SoftDeleteByID(ctx context.Context, id string) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Users{}).
-		Where(entity.UsersColumns.ID+" = ?", id).
-		Update(entity.UsersColumns.DeletedAt, time.Now()).
-		Error
-}
-
-// SoftDeleteByIDTx 软删除用户记录
-func (ud *UserDao) SoftDeleteByIDTx(ctx context.Context, tx *gorm.DB, id string) error {
-	return tx.WithContext(ctx).
-		Model(&entity.Users{}).
-		Where(entity.UsersColumns.ID+" = ?", id).
-		Update(entity.UsersColumns.DeletedAt, time.Now()).
-		Error
 }
 
 // Query 分页查询用户
@@ -152,22 +175,4 @@ func (ud *UserDao) Query(ctx context.Context, page int, pageSize int,
 	}
 
 	return users, total, nil
-}
-
-// UpdateStatus 更新用户状态
-func (ud *UserDao) UpdateStatus(ctx context.Context, id string, status int) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Users{}).
-		Where(entity.UsersColumns.ID+" = ?", id).
-		Update(entity.UsersColumns.Status, status).
-		Error
-}
-
-// UpdateLastLoginTime 更新管理员的最后登录时间
-func (ud *UserDao) UpdateLastLoginTime(ctx context.Context, id string) error {
-	return db.Client.WithContext(ctx).
-		Model(&entity.Users{}).
-		Where(entity.UsersColumns.ID+" = ?", id).
-		Update(entity.UsersColumns.LastLoginAt, time.Now()).
-		Error
 }
